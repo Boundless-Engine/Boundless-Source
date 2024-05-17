@@ -1,0 +1,137 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Source Repository
+      uses: actions/checkout@v2
+
+    - name: Set up C++ Environment
+      uses: actions/setup-cpp@v1
+      with:
+        compiler: gcc
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake make
+
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        make
+
+    - name: Archive Build Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-artifacts-linux
+        path: build/
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Source Repository
+      uses: actions/checkout@v2
+
+    - name: Set up MSBuild
+      uses: microsoft/setup-msbuild@v1
+
+    - name: Set up C++ Environment
+      uses: actions/setup-cpp@v1
+      with:
+        compiler: msvc
+
+    - name: Install Dependencies
+      run: |
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+        refreshenv
+
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        cmake --build . --config Release
+
+    - name: Archive Build Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-artifacts-windows
+        path: build/
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout Source Repository
+      uses: actions/checkout@v2
+
+    - name: Set up C++ Environment
+      uses: actions/setup-cpp@v1
+      with:
+        compiler: clang
+
+    - name: Install Dependencies
+      run: |
+        brew install cmake
+
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        make
+
+    - name: Archive Build Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-artifacts-macos
+        path: build/
+
+  deploy:
+    needs: [build-linux, build-windows, build-macos]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Release Repository
+      uses: actions/checkout@v2
+      with:
+        repository: Boundless-Engine/boundless
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Download Linux Build Artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: build-artifacts-linux
+
+    - name: Download Windows Build Artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: build-artifacts-windows
+
+    - name: Download macOS Build Artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: build-artifacts-macos
+
+    - name: Copy Build Artifacts
+      run: |
+        cp -r build/* .
+
+    - name: Commit and Push Changes
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add .
+        git commit -m "Deploy new build"
+        git push origin master
