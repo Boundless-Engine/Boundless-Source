@@ -106,7 +106,7 @@ jobs:
     - name: Checkout Release Repository
       uses: actions/checkout@v2
       with:
-        repository: your-username/release-repo
+        repository: Boundless-Engine/boundless
         token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Download Linux Build Artifacts
