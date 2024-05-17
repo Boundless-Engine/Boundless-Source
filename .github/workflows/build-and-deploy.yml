@@ -1,4 +1,4 @@
-name: Build and Deploy
+name: Build, Test, and Deploy
 
 on:
   push:
@@ -29,6 +29,11 @@ jobs:
         cd build
         cmake ..
         make
+
+    - name: Run Tests
+      run: |
+        cd build
+        ctest --output-on-failure
 
     - name: Archive Build Artifacts
       uses: actions/upload-artifact@v2
@@ -63,6 +68,11 @@ jobs:
         cmake ..
         cmake --build . --config Release
 
+    - name: Run Tests
+      run: |
+        cd build
+        ctest --output-on-failure
+
     - name: Archive Build Artifacts
       uses: actions/upload-artifact@v2
       with:
@@ -92,6 +102,11 @@ jobs:
         cmake ..
         make
 
+    - name: Run Tests
+      run: |
+        cd build
+        ctest --output-on-failure
+
     - name: Archive Build Artifacts
       uses: actions/upload-artifact@v2
       with:
@@ -106,7 +121,7 @@ jobs:
     - name: Checkout Release Repository
       uses: actions/checkout@v2
       with:
-        repository: Boundless-Engine/boundless
+        repository: Boundless-Engine/Boundless
         token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Download Linux Build Artifacts
