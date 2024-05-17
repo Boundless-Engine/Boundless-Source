@@ -13,7 +13,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        types:  'fix, feature, bug'
+        types:  'Fix, Feature, Bug'
         scopes: 'CI/CD, APP, ENGINE'
 
     - name: Fail if No Issue Reference
