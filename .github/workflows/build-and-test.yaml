@@ -1,0 +1,96 @@
+name: Build and Test (Pull Request)
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Source Repository
+      uses: actions/checkout@v2
+
+    - name: Set up C++ Environment
+      uses: actions/setup-cpp@v1
+      with:
+        compiler: gcc
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake make
+
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        make
+
+    - name: Run Tests
+      run: |
+        cd build
+        ctest --output-on-failure
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Source Repository
+      uses: actions/checkout@v2
+
+    - name: Set up MSBuild
+      uses: microsoft/setup-msbuild@v1
+
+    - name: Set up C++ Environment
+      uses: actions/setup-cpp@v1
+      with:
+        compiler: msvc
+
+    - name: Install Dependencies
+      run: |
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+        refreshenv
+
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        cmake --build . --config Release
+
+    - name: Run Tests
+      run: |
+        cd build
+        ctest --output-on-failure
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout Source Repository
+      uses: actions/checkout@v2
+
+    - name: Set up C++ Environment
+      uses: actions/setup-cpp@v1
+      with:
+        compiler: clang
+
+    - name: Install Dependencies
+      run: |
+        brew install cmake
+
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        make
+
+    - name: Run Tests
+      run: |
+        cd build
+        ctest --output-on-failure
