@@ -1,0 +1,24 @@
+name: Require Issue Reference
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  require-issue:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check PR for Issue Reference
+      uses: amannn/action-semantic-pull-request@v3
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        types: 'fix, feat, chore'
+        scopes: 'cli,app,docs'
+
+    - name: Fail if No Issue Reference
+      run: |
+        if ! grep -q -E '(fix|feat|chore)\(cli|app|docs\):' <<< "${{ github.event.pull_request.title }}"; then
+          echo "Pull request title must contain a reference to an issue in the format 'type(scope): description'."
+          exit 1
+        fi
