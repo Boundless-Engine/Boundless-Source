@@ -1,4 +1,4 @@
-project "BVulkan"
+project "BApp"
    kind "StaticLib"
    language "C++"
    cppdialect "C++20"
@@ -10,10 +10,14 @@ project "BVulkan"
    includedirs
    {
       "src",
+      "../system/src",
+      "../events/src"
    }
 
    links
    {
+        "BSystem",
+        "BEvent"
    }
 
 

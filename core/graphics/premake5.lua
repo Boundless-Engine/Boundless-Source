@@ -1,4 +1,4 @@
-project "BInput"
+project "BGraphics"
    kind "StaticLib"
    language "C++"
    cppdialect "C++20"
@@ -10,14 +10,21 @@ project "BInput"
    includedirs
    {
       "src",
-      "../events/src",
-      "../system/src"
+      "../../core/system/src/",
+      "../../core/window/src",
+      "../../core/events/src",
+      "../../dependencies/GLFW/include",
+      "%{IncludeDir.VulkanSDK}"
    }
-
+   
    links
    {
       "BEvent",
+      "BWindow",
+      "ImGui",
       "BSystem",
+      "GLFW",
+      "%{Library.Vulkan}"
    }
 
 

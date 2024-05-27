@@ -1,4 +1,4 @@
-project "Unit Tests"
+project "Runtime"
    kind "ConsoleApp"
    language "C++"
    cppdialect "C++20"
@@ -10,26 +10,45 @@ project "Unit Tests"
    includedirs
    {
       "src",
+      -- plugins
+      "../plugins/editor/src",
+      
+      -- core 
       "../core/app/src",
       "../core/events/src",
       "../core/input/src",
       "../core/system/src",
       "../core/window/src",
-      "../devops/unit test framework/src",
+      "../core/graphics/src",
+      "../core/gui/src",
+      "../core/core/src",
+      -- dependencies
+      "../dependencies/glfw/include/",
+      "../dependencies/imgui/",
 
-
+      "%{IncludeDir.VulkanSDK}",
    }
 
    links
    {
-      "BUnitTestFramework",
+      -- core
       "BApp",
       "BEvent",
       "BInput",
       "BSystem",
       "BWindow",
-      "BGraphics",
-      "BGui",
+      
+      -- graphics
+      "%{Library.Vulkan}",
+      
+      -- dependencies 
+      "GLFW",
+      "ImGui",
+
+      -- core
+      "BCore",
+      -- "plugins"
+      "Boundless-Editor"
    }
 
    targetdir ("../build/bin/" .. outputdir .. "/%{prj.name}")

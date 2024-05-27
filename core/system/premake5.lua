@@ -1,4 +1,4 @@
-project "BInput"
+project "BSystem"
    kind "StaticLib"
    language "C++"
    cppdialect "C++20"
@@ -10,14 +10,10 @@ project "BInput"
    includedirs
    {
       "src",
-      "../events/src",
-      "../system/src"
    }
 
    links
    {
-      "BEvent",
-      "BSystem",
    }
 
 

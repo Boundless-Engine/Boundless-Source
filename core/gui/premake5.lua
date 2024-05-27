@@ -1,4 +1,4 @@
-project "BDirectX"
+project "BGui"
    kind "StaticLib"
    language "C++"
    cppdialect "C++20"
@@ -10,10 +10,36 @@ project "BDirectX"
    includedirs
    {
       "src",
-   }
+      --  shared
+      "../../core/system/src/",
 
+      -- core
+      "../../core/window/src",
+      "../../core/graphics/src",
+      "../../core/events/src",
+      
+      -- dependencies
+      "../../dependencies/imgui/",
+      "../../dependencies/GLFW/include/",
+      -- graphics
+      "%{IncludeDir.VulkanSDK}",
+   }
+   
    links
    {
+      -- shared
+      "BSystem",
+      -- core
+      "BEvent",
+      "BWindow",
+      "BGraphics",
+
+      -- dependencies
+      "ImGui",
+      "GLFW",
+
+      -- graphics
+      "%{Library.Vulkan}"
    }
 
 

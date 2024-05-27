@@ -6,6 +6,7 @@
 *.lo
 *.o
 *.obj
+*.pdb
 
 # Precompiled Headers
 *.gch
@@ -31,8 +32,15 @@
 *.out
 *.app
 
+# output and VSC stuff
 /build
 /.vs
 
+#visual studio stuff
+*.sln
+
 *.vcxproj
 *.vcxproj.*
+
+/devops/*
+/deploy/*

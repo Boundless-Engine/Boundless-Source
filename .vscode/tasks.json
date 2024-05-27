@@ -1,0 +1,64 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Generate Projects",
+            "type": "shell",
+            "command": "cmd.exe",
+            "args": [
+                "/c",
+                "cd scripts && call Setup.bat && exit"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }, 
+        {
+            "label": "Generate Docs",
+            "type": "shell",
+            "command": "cmd.exe",
+            "args": [
+                "/c",
+                "cd deploy && call doxygen && exit"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+        , 
+        {
+            "label": "View Docs",
+            "type": "shell",
+            "command": "cmd.exe",
+            "args": [
+                "/c",
+                "cd deploy\\docs\\html\\ && call index.html && exit"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Generate TODOs",
+            "type": "shell",
+            "command": "cmd.exe",
+            "args": [
+                "/c",
+                "cd scripts\\generate_todos\\ && call run.bat"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

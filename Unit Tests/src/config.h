@@ -1,4 +1,3 @@
 #pragma once
 
-#define RUN_VISUAL_TESTS 0
-#define RUN_AUTOMATED_TESTS 1
+#define ENABLE_USER_CONTROLLED_TESTS true

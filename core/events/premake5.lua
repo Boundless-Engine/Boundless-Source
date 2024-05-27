@@ -1,4 +1,4 @@
-project "BInput"
+project "BEvent"
    kind "StaticLib"
    language "C++"
    cppdialect "C++20"
@@ -10,15 +10,13 @@ project "BInput"
    includedirs
    {
       "src",
-      "../events/src",
-      "../system/src"
-   }
-
-   links
-   {
-      "BEvent",
-      "BSystem",
-   }
+      "../system/src",
+    }
+    
+    links
+    {
+       "BSystem"
+    }
 
 
    targetdir ("../../build/bin/" .. outputdir .. "/%{prj.name}")
