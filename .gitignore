@@ -33,6 +33,7 @@
 *.app
 
 # output and VSC stuff
+*/build
 /build
 /.vs
 

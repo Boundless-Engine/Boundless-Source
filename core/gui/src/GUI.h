@@ -43,6 +43,7 @@ namespace Boundless {
 				return SUCCESS;
 			}
 
+
 			static BReturn Destroy(I::IGUI** pGUI)
 			{
 				if (*pGUI == nullptr)
