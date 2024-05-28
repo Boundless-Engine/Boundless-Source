@@ -10,12 +10,26 @@ project "Unit Tests"
    includedirs
    {
       "src",
+      "../core/app/src",
+      "../core/events/src",
+      "../core/input/src",
+      "../core/system/src",
+      "../core/window/src",
+      "../devops/unit test framework/src",
+
+
    }
 
    links
    {
+      "BUnitTestFramework",
+      "BApp",
+      "BEvent",
+      "BInput",
+      "BSystem",
       "BWindow",
-      "BVulkan"
+      "BGraphics",
+      "BGui",
    }
 
    targetdir ("../build/bin/" .. outputdir .. "/%{prj.name}")

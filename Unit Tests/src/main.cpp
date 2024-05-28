@@ -4,10 +4,11 @@
 
 #include "tests.h"
 
+
 int main() {
-#if RUN_VISUAL_TESTS
-	printf("VISUAL!");
-#elif RUN_AUTOMATED_TESTS
-	printf("AUTOMATED!");
+#if ENABLE_USER_CONTROLLED_TESTS
+	return Boundless::TestFramework::RunUserTests(EventSystemTest::KeyEventsTest);
+#else 
+	return Boundless::TestFramework::RunAutomatedTests();
 #endif
 }

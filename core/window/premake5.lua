@@ -10,12 +10,18 @@ project "BWindow"
    includedirs
    {
       "src",
-      "../../dependencies/GLFW/include/"
+      "../events/src",
+      "../system/src",
+      "../../dependencies/GLFW/include/",
+      "%{IncludeDir.VulkanSDK}"
    }
 
    links
    {
-      "GLFW"
+      "BEvent",
+      "BSystem",
+      "GLFW",
+      "%{Library.Vulkan}"
    }
 
 

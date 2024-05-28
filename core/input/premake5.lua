@@ -10,16 +10,19 @@ project "BInput"
    includedirs
    {
       "src",
+      "../events/src",
+      "../system/src"
    }
 
    links
    {
-    
+      "BEvent",
+      "BSystem",
    }
 
 
-   targetdir ("../../../build/bin/" .. outputdir .. "/%{prj.name}")
-   objdir ("../../../build/bin/" .. outputdir .. "/%{prj.name}")
+   targetdir ("../../build/bin/" .. outputdir .. "/%{prj.name}")
+   objdir ("../../build/bin/" .. outputdir .. "/%{prj.name}")
 
    filter "system:windows"
       systemversion "latest"

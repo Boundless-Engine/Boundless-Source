@@ -8,3 +8,4 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 include "BoundlessExternal.lua"
 include "Unit Tests"
+include "Runtime"
