@@ -18,7 +18,11 @@ namespace Boundless {
 
 			virtual void Begin() override;
 			virtual void End() override;
+			
+			virtual void Present() override;
 
+			void RebuildSwapchain();
+			
 			
 		private:
 			VulkanSurface* vk;

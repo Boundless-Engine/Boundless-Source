@@ -25,6 +25,8 @@ project "Runtime"
       -- dependencies
       "../dependencies/glfw/include/",
       "../dependencies/imgui/",
+      "../dependencies/json/single_include/nlohmann",
+
 
       "%{IncludeDir.VulkanSDK}",
    }

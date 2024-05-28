@@ -24,6 +24,7 @@ project "BCore"
       --  DEPENDENCIES
       "../../dependencies/GLFW/include/",
       "../../dependencies/imgui/",
+      "../../dependencies/json/single_include/nlohmann",
       -- GRAPHICS SDK
       "%{IncludeDir.VulkanSDK}"
    }

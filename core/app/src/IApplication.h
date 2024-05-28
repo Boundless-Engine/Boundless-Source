@@ -34,6 +34,7 @@ namespace Boundless {
 
 			virtual BReturn Run() = 0;
 			
+			virtual std::function<void()> Menubar() = 0;
 
 		protected:
 			BReturn LoadPrefs();

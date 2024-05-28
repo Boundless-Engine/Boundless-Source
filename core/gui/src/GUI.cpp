@@ -1,17 +1,4 @@
 #include "GUI.h"
 
-namespace Boundless {
-	namespace Graphics {
-		namespace Gui
-		{
-		/*	BReturn Create(I::IRasterSurface* rasterSurface, I::IGUI** pGUI, std::function<void()> menu)
-		*/
-			//BReturn Destroy(I::IGUI** pGUI)
-
-
-
-		}
-	}
-}
-
-
+/* THIS FILE IS PURPOSFULY EMPTY.*/
+/* THIS IS THE SINGLE TRANSLATION UNIT FOR THE LIBRARY: BGui (Boundless Graphical User Interface)*/

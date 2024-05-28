@@ -27,6 +27,9 @@ project "Boundless-Editor"
          -- dependencies
          "../../dependencies/imgui/",
          "../../dependencies/GLFW/include",
+         
+         "../../dependencies/json/single_include/nlohmann",
+
          -- graphics apis
          "%{IncludeDir.VulkanSDK}"
     }

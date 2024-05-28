@@ -1,8 +1,6 @@
 #pragma once
 
 #include "pch.h"
-#include <vector>
-#include <functional>
 
 #include "IGUI.h"
 
@@ -10,8 +8,9 @@
 #include "VulkanSurface.h"
 
 #include "VulkanGUI.h"
-#include <GUITheme.h>
 
+#include "GUITheme.h"
+#include "GUIThemeSerializer.h"
 
 
 //#define IMGUI_UNLIMITED_FRAME_RATE
@@ -20,7 +19,9 @@ namespace Boundless {
 
 		namespace Gui
 		{
-			static BReturn Create(I::IRasterSurface* rasterSurface, I::IGUI** pGUI, GuiTheme* theme = nullptr, std::function<void()> menu = nullptr)
+		
+
+			static BReturn Create(I::IRasterSurface* rasterSurface, I::IGUI** pGUI, const std::string& themeFilepath, std::function<void()> menu = nullptr)
 			{
 #if			defined(NATIVE_WINDOW_HANDLES)
 #elif		defined(ENABLE_VULKAN)
@@ -31,8 +32,13 @@ namespace Boundless {
 				if (menu != nullptr)
 					(*pGUI)->SetMenuCallback(menu);
 				
-				if (theme != nullptr)
-					theme->Apply();
+
+				GuiTheme theme;
+
+				auto r = Theme::Load(themeFilepath, &theme);
+				
+				if (r == SUCCESS)
+					Theme::Apply(&theme);
 				
 				return SUCCESS;
 			}
@@ -46,6 +52,9 @@ namespace Boundless {
 
 				return SUCCESS;
 			}
+
+	
+			
 
 		}
 	}

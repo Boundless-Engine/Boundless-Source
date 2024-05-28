@@ -91,7 +91,10 @@ namespace Boundless {
 
 	BReturn GLFWWindow::Create(int w, int h, const char* title)
 	{
-	
+		if (w == 0)
+			w = 1920;
+		if (h == 0)
+			h = 1080;
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
 		handle = (void*)glfwCreateWindow(w, h, title, nullptr, nullptr);

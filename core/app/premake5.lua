@@ -11,7 +11,9 @@ project "BApp"
    {
       "src",
       "../system/src",
-      "../events/src"
+      "../events/src",
+      
+      "../../dependencies/json/single_include/nlohmann",
    }
 
    links

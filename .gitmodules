@@ -7,3 +7,6 @@
 [submodule "dependencies/stb"]
 	path = dependencies/stb
 	url = https://github.com/AustinLynes/stb
+[submodule "dependencies/json"]
+	path = dependencies/json
+	url = https://github.com/nlohmann/json.git

@@ -172,16 +172,12 @@ namespace Boundless {
 
 				// When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background
 				// and handle the pass-thru hole, so we ask Begin() to not render a background.
+
 				if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
 					window_flags |= ImGuiWindowFlags_NoBackground;
 
-				// Important: note that we proceed even if Begin() returns false (aka window is collapsed).
-				// This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
-				// all active windows docked into it will lose their parent and become undocked.
-				// We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
-				// any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-				ImGui::Begin("DockSpace Demo", nullptr, window_flags);
+				ImGui::Begin("###BoundlessDockspace", nullptr, window_flags);
 				ImGui::PopStyleVar();
 
 				ImGui::PopStyleVar(2);
@@ -190,7 +186,7 @@ namespace Boundless {
 				ImGuiIO& io = ImGui::GetIO();
 				if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 				{
-					ImGuiID dockspace_id = ImGui::GetID("VulkanAppDockspace");
+					ImGuiID dockspace_id = ImGui::GetID("###BoundlessDockspace");
 					ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 				}
 
@@ -212,10 +208,26 @@ namespace Boundless {
 
 		void VulkanGUI::End()
 		{
-			if (g_swapchainRebuild)
-				return;
-
 			ImGui::Render();
+
+			// Update and Render additional Platform Windows
+			ImGuiIO& io = ImGui::GetIO();
+			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+			{
+				ImGui::UpdatePlatformWindows();
+				ImGui::RenderPlatformWindowsDefault();
+			}
+
+		}
+
+		void VulkanGUI::Present()
+		{
+			
+			if (g_swapchainRebuild) {
+				RebuildSwapchain();
+				return;
+			}
+
 
 			VkInstance instance = VK_NULL_HANDLE;					vk->GetInstance(&instance);
 			VkAllocationCallbacks allocator = {};					vk->GetAllocator(&allocator);
@@ -226,8 +238,7 @@ namespace Boundless {
 
 
 			ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
-			
-			ImGuiIO& io = ImGui::GetIO();
+
 
 			ImDrawData* draw_data = ImGui::GetDrawData();
 			const bool main_is_minimized = (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f);
@@ -257,13 +268,9 @@ namespace Boundless {
 				+vkResetFences(device, 1, &fd->Fence);
 			}
 
-			//{
-			//	// Free resources in queue
-			//	for (auto& func : s_ResourceFreeQueue[s_CurrentFrameIndex])
-			//		func();
-			//	s_ResourceFreeQueue[s_CurrentFrameIndex].clear();
-			//}
 
+			// aquire command buffer
+			// reset, begin cmd buffer
 			{
 				// Free command buffers allocated by Application::GetCommandBuffer
 				// These use g_MainWindowData.FrameIndex and not s_CurrentFrameIndex because they're tied to the swapchain image index
@@ -282,6 +289,7 @@ namespace Boundless {
 				info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 				+vkBeginCommandBuffer(fd->CommandBuffer, &info);
 			}
+			// begin renderpass
 			{
 				VkRenderPassBeginInfo info = {};
 				info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -294,14 +302,12 @@ namespace Boundless {
 				vkCmdBeginRenderPass(fd->CommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
 			}
 
-
-
 			// Record dear imgui primitives into command buffer
 			ImGui_ImplVulkan_RenderDrawData(draw_data, fd->CommandBuffer);
-
-			// Submit command buffer
-			vkCmdEndRenderPass(fd->CommandBuffer);
+			// end rendpass, submit command buffer
 			{
+				vkCmdEndRenderPass(fd->CommandBuffer);
+
 				VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 				VkSubmitInfo info = {};
 				info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -317,14 +323,6 @@ namespace Boundless {
 				+vkQueueSubmit(renderQueue, 1, &info, fd->Fence);
 			}
 
-	
-
-			// Update and Render additional Platform Windows
-			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-			{
-				ImGui::UpdatePlatformWindows();
-				ImGui::RenderPlatformWindowsDefault();
-			}
 
 			VkQueue presentQueue = VK_NULL_HANDLE; vk->GetQueue(&presentQueue);
 
@@ -346,8 +344,27 @@ namespace Boundless {
 				return;
 			}
 			Graphics::check_vk_result(err);
-			
+
 			wd->SemaphoreIndex = (wd->SemaphoreIndex + 1) % wd->ImageCount; // Now we can use the next set of semaphores
+		}
+
+		void VulkanGUI::RebuildSwapchain()
+		{
+			if (!g_swapchainRebuild)
+				return;
+
+			g_swapchainRebuild = false;
+
+			VkInstance instance = VK_NULL_HANDLE; vk->GetInstance(&instance);
+			VkDevice device = VK_NULL_HANDLE; vk->GetDevice(&device);
+			VkPhysicalDevice physicalDevice = VK_NULL_HANDLE; vk->GetPhysicalDevice(&physicalDevice);
+			VkAllocationCallbacks* allocator = nullptr; vk->GetAllocator(allocator);
+			uint32_t queueFamily = vk->GetQueueFamily(&queueFamily);
+			int width = vk->Width();
+			int height = vk->Height();
+
+			ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
+			ImGui_ImplVulkanH_CreateOrResizeWindow(instance, physicalDevice, device, wd, queueFamily, allocator, width, height, wd->ImageCount);
 		}
 
 
