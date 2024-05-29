@@ -10,6 +10,8 @@ project "BGui"
    includedirs
    {
       "src",
+      -- DEBUG 
+      "../../core/debug/logger/src",
       --  shared
       "../../core/system/src/",
 
@@ -31,6 +33,8 @@ project "BGui"
    {
       -- shared
       "BSystem",
+      -- DEBUG
+      "BLogger",
       -- core
       "BEvent",
       "BWindow",

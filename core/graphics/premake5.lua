@@ -10,6 +10,7 @@ project "BGraphics"
    includedirs
    {
       "src",
+      "../../core/debug/logger/src",
       "../../core/system/src/",
       "../../core/window/src",
       "../../core/events/src",
@@ -20,6 +21,7 @@ project "BGraphics"
    
    links
    {
+      "BLogger",
       "BEvent",
       "BWindow",
       "ImGui",
