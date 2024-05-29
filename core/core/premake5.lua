@@ -12,6 +12,7 @@ project "BCore"
       "src",
       -- DEBUG
       "../../core/debug/logger/src",
+      "../../core/debug/profiler/src",
       
       -- CORE
       "../../core/app/src",
@@ -33,20 +34,22 @@ project "BCore"
 
    links
    {
-        -- CORE
-        "BApp",
-        "BEvent",
-        "BGraphics",
-        "BGui",
-        "BWindow",
-        "BLogger",
-        -- SHARED
-        "BSystem",
-        -- DEPENDENCIES
-        "GLFW",
-        "ImGui",
-        -- GRAPHICS SDK
-        "%{Library.Vulkan}"
+      -- CORE
+      "BApp",
+      "BEvent",
+      "BGraphics",
+      "BGui",
+      "BWindow",
+      -- DEBUG
+      "BLogger",
+      "BProfiler",
+      -- SHARED
+      "BSystem",
+      -- DEPENDENCIES
+      "GLFW",
+      "ImGui",
+      -- GRAPHICS SDK
+      "%{Library.Vulkan}"
    }
 
 	targetdir ("../../build/" .. outputdir .. "/%{prj.name}")

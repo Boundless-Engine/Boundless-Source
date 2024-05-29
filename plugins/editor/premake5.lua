@@ -12,6 +12,7 @@ project "Boundless-Editor"
         "src",
          -- debug
         "../../core/debug/logger/src",
+        "../../core/debug/profiler/src",
          -- core
         "../../core/app/src",
         "../../core/events/src",

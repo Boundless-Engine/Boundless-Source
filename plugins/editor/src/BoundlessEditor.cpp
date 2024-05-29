@@ -8,16 +8,16 @@ constexpr const char* EDITOR_META_FILE_LOCATION = "themes/default.json\0";
 #include "views/console.h"
 #include "views/scene.h"
 
-// TODO! Move to Core.h
 
 namespace {
 	
 	I::IWindow* win;
 	I::IInputHandler* input;
-	I::IRasterSurface* surface;
+	I::IGraphicsAPI* surface;
 	I::IGUI* gui;
 
 }
+
 BoundlessEditor* BoundlessEditor::_instance = nullptr;
 
 static void HelpMarker(const char* desc)
@@ -510,7 +510,6 @@ void BoundlessEditor::ShowPreferences()
 	}
 }
 
-
 BReturn BoundlessEditor::Initillize()
 {
     // determine if a meta file exists.. if one doesnt create one
@@ -537,7 +536,7 @@ BReturn BoundlessEditor::Initillize()
 
 	+Window::Create(prefs.Window.width, prefs.Window.height, EDITOR_TITLE, &win);
 	+Input::Create(&input);
-	+Graphics::RasterSurface::Create(win, &surface);
+	+Graphics::GraphicsAPI::Create(win, &surface);
 
 	+Graphics::Gui::Create(surface, &gui, metadata.theme, _instance->Menubar());
 	
@@ -553,7 +552,7 @@ BReturn BoundlessEditor::Shutdown()
     RemoveLayer<SceneView>();
 
 	+Graphics::Gui::Destroy(&gui);
-	+Graphics::RasterSurface::Destroy(&surface);
+	+Graphics::GraphicsAPI::Destroy(&surface);
 	+Input::Destroy(&input);
 	+Window::Destroy(&win);
 
@@ -575,10 +574,14 @@ BReturn BoundlessEditor::Run()
 			l->OnUpdate();
 		}
 
-		surface->BeginFrame();
-        
+        for (auto& l : layers)
+        {
+            l->OnRender();
+        }
+
 		{
 			gui->Begin();
+         
 			for (auto& l : layers)
 			{
 				l->OnGUI();
@@ -592,8 +595,6 @@ BReturn BoundlessEditor::Run()
 			gui->End();
 		}
 		gui->Present();
-
-		surface->EndFrame();
 
 
 		// update all layers...
@@ -609,6 +610,7 @@ void BoundlessEditor::Close()
 	auto shutdown = Events::ApplicationClosedEvent(true);
 	EventDispatcher::Dispatch(&shutdown);
 }
+
 BReturn BoundlessEditor::Serialize()
 {
     std::ofstream file(metadata_filepath);

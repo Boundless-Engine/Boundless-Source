@@ -11,6 +11,7 @@ project "BInput"
    {
       "src",
       "../../core/debug/logger/src",
+      "../../core/debug/profiler/src",
       "../events/src",
       "../system/src"
    }
@@ -18,6 +19,7 @@ project "BInput"
    links
    {
       "BLogger",
+      "BProfiler",
       "BEvent",
       "BSystem",
    }

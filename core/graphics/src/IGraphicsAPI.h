@@ -5,14 +5,11 @@
 
 namespace Boundless {
 	namespace I {
-		class IRasterSurface {
+		class IGraphicsAPI {
 		public:
-			IRasterSurface(IWindow* win) : win{ win } {}
+			IGraphicsAPI(IWindow* win) : win{ win } {}
 			
-			virtual ~IRasterSurface() {}
-
-			virtual void BeginFrame() = 0;
-			virtual void EndFrame() = 0;
+			virtual ~IGraphicsAPI() {}
 
 			int Width() { return win->Width(); }
 			int Height() { return win->Height(); }

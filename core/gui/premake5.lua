@@ -12,6 +12,7 @@ project "BGui"
       "src",
       -- DEBUG 
       "../../core/debug/logger/src",
+      "../../core/debug/profiler/src",
       --  shared
       "../../core/system/src/",
 
@@ -35,6 +36,7 @@ project "BGui"
       "BSystem",
       -- DEBUG
       "BLogger",
+      "BProfiler",
       -- core
       "BEvent",
       "BWindow",

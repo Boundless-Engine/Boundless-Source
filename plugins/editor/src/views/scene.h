@@ -4,22 +4,24 @@
 
 #include "Boundless/Core.h"
 using namespace Boundless;
+using namespace Graphics;
 
-#include "graphics/FramebufferRenderer.h"
 #include "backends/imgui_impl_vulkan.h"
 
 class SceneView : public Boundless::I::ILayer
 {
 public:
-	SceneView(I::IRasterSurface* pRasterSurface) : rasterSurface{pRasterSurface} {}
+	SceneView(I::IGraphicsAPI* api) : api{api} {}
 	~SceneView() {}
 
 	virtual BReturn OnAttach() override {
-		renderer = new FramebufferRenderer(rasterSurface);
+		Rendering::CreateFrambufferRenderer(api, &renderer);
+		renderer->Initillize();
 		return SUCCESS;
 	}
 	virtual BReturn OnDetach() override {
-		delete renderer;
+		renderer->Shutdown();
+		Rendering::DestroyFramebufferRenderer(&renderer);
 		return SUCCESS;
 	}
 
@@ -31,15 +33,15 @@ public:
 	{
 		ImGui::Begin("Scene");
 		ImTextureID sceneTexture = reinterpret_cast<ImTextureID>(renderer->GetRenderTexture());
-
-		ImVec2 region = ImGui::GetContentRegionMax();
-		ImGui::Image(sceneTexture, region, { 0, 0 }, {1, 0});
+		
+		ImVec2 region = ImGui::GetContentRegionAvail();
+		ImGui::Image(sceneTexture, region, { 0, 1 }, {1,  0});
 
 		ImGui::End();
 	}
 
 private:
-	I::IRasterSurface* rasterSurface;
-	FramebufferRenderer* renderer;
+	I::IGraphicsAPI* api;
+	I::IFramebufferRenderer* renderer;
 
 };

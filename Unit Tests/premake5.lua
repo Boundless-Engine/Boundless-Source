@@ -11,6 +11,7 @@ project "Unit Tests"
    {
       "src",
       "../core/debug/logger/src",
+      "../core/debug/profiler/src",
       "../core/app/src",
       "../core/events/src",
       "../core/input/src",
@@ -24,6 +25,7 @@ project "Unit Tests"
    links
    {
       "BLogger",
+      "BProfiler",
       "BUnitTestFramework",
       "BApp",
       "BEvent",

@@ -20,6 +20,7 @@ namespace Boundless {
 			virtual ~IRenderer() = default;
 
 			virtual void Initillize() = 0;
+			virtual void Shutdown() = 0;
 
 			virtual void Update(float ts) = 0;
 			virtual void Render() = 0;

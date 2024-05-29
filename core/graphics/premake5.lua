@@ -11,6 +11,7 @@ project "BGraphics"
    {
       "src",
       "../../core/debug/logger/src",
+      "../../core/debug/profiler/src",
       "../../core/system/src/",
       "../../core/window/src",
       "../../core/events/src",
@@ -22,6 +23,7 @@ project "BGraphics"
    links
    {
       "BLogger",
+      "BProfiler",
       "BEvent",
       "BWindow",
       "ImGui",

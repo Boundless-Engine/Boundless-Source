@@ -1,6 +1,6 @@
 #include "VulkanGUI.h"
 
-#include "VulkanSurface.h"
+#include "VulkanAPI.h"
 
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
@@ -13,7 +13,7 @@ namespace Boundless {
 		static uint32_t s_CurrentFrameIndex = 0;
 		static bool g_swapchainRebuild = false;
 
-		VulkanGUI::VulkanGUI(VulkanSurface* vk)
+		VulkanGUI::VulkanGUI(VulkanAPI* vk)
 			: vk{vk}
 		{
 			ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;

@@ -12,7 +12,8 @@ project "BApp"
       "src",
       -- debug
       "../debug/logger/src",
-
+      "../debug/profiler/src",
+      
       "../system/src",
       "../events/src",
 
