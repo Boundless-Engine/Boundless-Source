@@ -4,8 +4,8 @@
 
 #include "IGUI.h"
 
-#include "IRasterSurface.h"
-#include "VulkanSurface.h"
+#include "IGraphicsAPI.h"
+#include "VulkanAPI.h"
 
 #include "VulkanGUI.h"
 
@@ -20,11 +20,11 @@ namespace Boundless {
 		namespace Gui
 		{
 		
-			static BReturn Create(I::IRasterSurface* rasterSurface, I::IGUI** pGUI, const std::string& themeFilepath, std::function<void()> menu = nullptr)
+			static BReturn Create(I::IGraphicsAPI* rasterSurface, I::IGUI** pGUI, const std::string& themeFilepath, std::function<void()> menu = nullptr)
 			{
 #if			defined(NATIVE_WINDOW_HANDLES)
 #elif		defined(ENABLE_VULKAN)
-				*pGUI = new Graphics::VulkanGUI(static_cast<Graphics::VulkanSurface*>(rasterSurface));
+				*pGUI = new Graphics::VulkanGUI(static_cast<Graphics::VulkanAPI*>(rasterSurface));
 #elif		defined(ENABLE_DIRECTX)
 #endif
 

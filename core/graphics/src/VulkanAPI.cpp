@@ -1,10 +1,14 @@
-#include "VulkanSurface.h"
+#include "VulkanAPI.h"
 
 #include "backends/imgui_impl_vulkan.h"
 
+#include "Profiler.h"
+
 namespace Boundless {
 	namespace Graphics {
-
+		
+		#define to_bytes_per_pixel(b, p)(b / 8) * p
+		
 		std::string vkResultToString(VkResult result) {
 			static const std::unordered_map<VkResult, std::string> resultStrings = {
 				{VK_SUCCESS, "VK_SUCCESS"},
@@ -77,8 +81,9 @@ namespace Boundless {
 			check_vk_result(res);
 		}
 
-		VulkanSurface::VulkanSurface(I::IWindow* pWindow) : I::IRasterSurface(pWindow) 
+		VulkanAPI::VulkanAPI(I::IWindow* pWindow) : I::IGraphicsAPI(pWindow) 
 		{
+			fn_profiler("VulkanSurface::VulkanSurface()");
 			uint32_t extensions_count = 0;
 			const char** extensions = glfwGetRequiredInstanceExtensions(&extensions_count);
 
@@ -229,8 +234,11 @@ namespace Boundless {
 			}
 		}
 
-		VulkanSurface::~VulkanSurface()
+		VulkanAPI::~VulkanAPI()
 		{
+			fn_profiler("VulkanSurface::~VulkanSurface()");
+
+			vkDestroyCommandPool(device, commandPool, allocator);
 			vkDestroyDescriptorPool(device, descriptorPool, allocator);
 
 #ifdef VULKAN_DEBUG_REPORT
@@ -245,24 +253,15 @@ namespace Boundless {
 		}
 	
 
-		void VulkanSurface::BeginFrame()
-		{
 
-		}
-
-		void VulkanSurface::EndFrame()
-		{
-
-		}
-
-		BReturn VulkanSurface::GetInstance(VkInstance* pInstance)
+		BReturn VulkanAPI::GetInstance(VkInstance* pInstance)
 		{
 			*pInstance = instance;
 
 			return SUCCESS;
 		}
 
-		BReturn VulkanSurface::GetAllocator(VkAllocationCallbacks* pAllocatorCallback)
+		BReturn VulkanAPI::GetAllocator(VkAllocationCallbacks* pAllocatorCallback)
 		{
 
 			if (allocator == nullptr)
@@ -272,7 +271,7 @@ namespace Boundless {
 
 			return SUCCESS;
 		}
-		BReturn VulkanSurface::GetDevice(VkDevice* pDevice)
+		BReturn VulkanAPI::GetDevice(VkDevice* pDevice)
 		{
 			if (device == nullptr || *pDevice != VK_NULL_HANDLE)
 				return FAILURE;
@@ -281,7 +280,7 @@ namespace Boundless {
 
 			return SUCCESS;
 		}
-		BReturn VulkanSurface::GetPhysicalDevice(VkPhysicalDevice* pPhysicalDevice)
+		BReturn VulkanAPI::GetPhysicalDevice(VkPhysicalDevice* pPhysicalDevice)
 		{
 			if (physicalDevice == nullptr || *pPhysicalDevice != VK_NULL_HANDLE)
 				return FAILURE;
@@ -290,7 +289,7 @@ namespace Boundless {
 
 			return SUCCESS;
 		}
-		BReturn VulkanSurface::GetQueueFamily(uint32_t* pQueueFamily)
+		BReturn VulkanAPI::GetQueueFamily(uint32_t* pQueueFamily)
 		{
 			if (queueFamily == (uint32_t)-1)
 				return FAILURE;
@@ -299,7 +298,7 @@ namespace Boundless {
 
 			return SUCCESS;
 		}
-		BReturn VulkanSurface::GetCommandBuffer(std::vector<VkCommandBuffer>& buffers, int idx)
+		BReturn VulkanAPI::GetCommandBuffer(std::vector<VkCommandBuffer>& buffers, int idx)
 		{
 			if (commandBuffers.size() <= 0 || idx < 0 || idx > commandBuffers.size())
 				return FAILURE;
@@ -307,7 +306,7 @@ namespace Boundless {
 			buffers = commandBuffers[idx];
 			return SUCCESS;
 		}
-		BReturn VulkanSurface::GetQueue(VkQueue* pQueue)
+		BReturn VulkanAPI::GetQueue(VkQueue* pQueue)
 		{
 			if (graphicsQueue == nullptr)
 				return FAILURE;
@@ -317,7 +316,7 @@ namespace Boundless {
 			return SUCCESS;
 		}
 
-		BReturn VulkanSurface::GetSurface(VkSurfaceKHR* pSurface)
+		BReturn VulkanAPI::GetSurface(VkSurfaceKHR* pSurface)
 		{
 			if (surface == VK_NULL_HANDLE)
 				return FAILURE;
@@ -327,7 +326,7 @@ namespace Boundless {
 			return SUCCESS;
 		}
 
-		BReturn VulkanSurface::GetDescriptorPool(VkDescriptorPool* pDescriptorPool)
+		BReturn VulkanAPI::GetDescriptorPool(VkDescriptorPool* pDescriptorPool)
 		{
 			if (descriptorPool == nullptr)
 				return FAILURE;
@@ -337,7 +336,7 @@ namespace Boundless {
 			return SUCCESS;
 		}
 
-		BReturn VulkanSurface::GetPipelineCache(VkPipelineCache* pPipelineCache)
+		BReturn VulkanAPI::GetPipelineCache(VkPipelineCache* pPipelineCache)
 		{
 			if (pipelineCache == nullptr)
 				return FAILURE;
@@ -346,7 +345,7 @@ namespace Boundless {
 
 			return SUCCESS;
 		}
-		BReturn VulkanSurface::GetCommandPool(VkCommandPool* pPool) {
+		BReturn VulkanAPI::GetCommandPool(VkCommandPool* pPool) {
 			if (commandPool == nullptr)
 				return FAILURE;
 
@@ -356,7 +355,7 @@ namespace Boundless {
 		}
 
 
-		BReturn VulkanSurface::BeginSingleTimeCommand(VkCommandPool commandPool, VkCommandBuffer& pCommandBuffer) {
+		BReturn VulkanAPI::BeginSingleTimeCommand(VkCommandPool commandPool, VkCommandBuffer& pCommandBuffer) {
 			VkCommandBufferAllocateInfo allocInfo = {};
 			allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 			allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -379,7 +378,7 @@ namespace Boundless {
 			return SUCCESS;
 		}
 
-		BReturn VulkanSurface::EndSingleTimeCommand(VkCommandPool commandPool, VkQueue queue, VkCommandBuffer& pCommandBuffer) {
+		BReturn VulkanAPI::EndSingleTimeCommand(VkCommandPool commandPool, VkQueue queue, VkCommandBuffer& pCommandBuffer) {
 			if (vkEndCommandBuffer(pCommandBuffer) != VK_SUCCESS) {
 				return FAILURE;
 			}
@@ -403,37 +402,7 @@ namespace Boundless {
 		}
 
 
-		VkFormat GetFormat(int b, int c) {
-			
-			if (b == 8 && c == 1)
-				return VK_FORMAT_R8_UNORM;
-			else if (b == 8 && c == 2)
-				return VK_FORMAT_R8G8_UNORM;
-			else if (b == 8 && c == 3)
-				return VK_FORMAT_R8G8B8_UNORM;
-			else if (b == 8 && c == 4)
-				return VK_FORMAT_R8G8B8A8_UNORM;
-			else if (b == 16 && c == 1)
-				return VK_FORMAT_R16_UNORM;
-			else if (b == 16 && c == 2)
-				return VK_FORMAT_R16G16_UNORM;
-			else if (b == 16 && c == 3)
-				return VK_FORMAT_R16G16B16_UNORM;
-			else if (b == 16 && c == 4)
-				return VK_FORMAT_R16G16B16A16_UNORM;
-			else if (b == 32 && c == 1)
-				return VK_FORMAT_R32_SFLOAT;
-			else if (b == 32 && c == 2)
-				return VK_FORMAT_R32G32_SFLOAT;
-			else if (b == 32 && c == 3)
-				return VK_FORMAT_R32G32B32_SFLOAT;
-			else if (b == 32 && c == 4)
-				return VK_FORMAT_R32G32B32A32_SFLOAT;
-			else
-				throw std::runtime_error("Format Unrecognized!");
-
-		}
-		uint32_t VulkanSurface::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+		uint32_t VulkanAPI::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
 			VkPhysicalDeviceMemoryProperties memProperties;
 			vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 
@@ -446,8 +415,15 @@ namespace Boundless {
 			throw std::runtime_error("failed to find suitable memory type!");
 		}
 
-		BReturn VulkanSurface::CreateTexture2D(void* data, int width, int height, int bits, int channels, Texture2D& image)
+		BReturn VulkanAPI::CreateTexture2D(void* data, int width, int height, Texture2D::MSAA samples, Texture2D::BitsPerPixel bits, Texture2D::ColorChannels channels, Texture2D& image)
 		{
+			image.width = width;
+			image.height = height;
+			image.channels = channels;
+			image.bits = bits;
+			image.samples = Texture2D::ConvertSampleRate(samples);
+			image.format = Texture2D::ConvertFormat(bits, channels);
+
 			// create image
 			{
 				VkImageCreateInfo info{};
@@ -458,12 +434,12 @@ namespace Boundless {
 				info.extent.height = height;
 				info.extent.depth = 1;
 				info.arrayLayers = 1;
-				info.format = GetFormat(bits, channels);
+				info.format = image.format;
 				info.imageType = VK_IMAGE_TYPE_2D;
 				info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 				info.mipLevels = 1;
 				info.tiling = VK_IMAGE_TILING_OPTIMAL;
-				info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+				info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 				info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 				info.samples = VK_SAMPLE_COUNT_1_BIT;
 
@@ -492,7 +468,7 @@ namespace Boundless {
 					// Create a staging buffer
 					VkBuffer stagingBuffer;
 					VkDeviceMemory stagingBufferMemory;
-					VkDeviceSize imageSize = width * height * (bits / 8) * channels;
+					VkDeviceSize imageSize = width * height * to_bytes_per_pixel((int)bits, (int)channels);
 
 					VkBufferCreateInfo bufferInfo{};
 					bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -606,7 +582,7 @@ namespace Boundless {
 				info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 				info.image = image.image;
 				info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-				info.format = GetFormat(bits, channels);
+				info.format = image.format;
 				info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 				info.subresourceRange.baseMipLevel = 0;
 				info.subresourceRange.levelCount = 1;
@@ -645,14 +621,90 @@ namespace Boundless {
 			return SUCCESS;
 		}
 
-		BReturn VulkanSurface::DestroyTexture2D(Texture2D& image)
+		BReturn VulkanAPI::DestroyTexture2D(Texture2D& image)
 		{
 			vkFreeMemory(device, image.memory, allocator);
 			vkDestroyImage(device, image.image, allocator);
 			vkDestroyImageView(device, image.view, allocator);
+			vkDestroySampler(device, image.sampler, allocator);
 
 			return SUCCESS;
 		}
+
+		BReturn VulkanAPI::CreateRenderPass(Texture2D& renderTexture, VkRenderPass* pRenderPass)
+		{
+			VkAttachmentDescription colorAttachment{};
+			colorAttachment.format = renderTexture.format;
+			colorAttachment.samples = renderTexture.samples;
+			colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+			colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+			colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+			colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+			VkAttachmentReference colorAttachmentRef{};
+			colorAttachmentRef.attachment = 0;
+			colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+			VkSubpassDescription subpass{};
+			subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+			subpass.colorAttachmentCount = 1;
+			subpass.pColorAttachments = &colorAttachmentRef;
+
+			VkRenderPassCreateInfo renderPassInfo{};
+			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+			renderPassInfo.attachmentCount = 1;
+			renderPassInfo.pAttachments = &colorAttachment;
+			renderPassInfo.subpassCount = 1;
+			renderPassInfo.pSubpasses = &subpass;
+
+
+			vkCreateRenderPass(device, &renderPassInfo, allocator, pRenderPass);
+
+			return SUCCESS;
+		}
+
+		BReturn VulkanAPI::DestroyRenderPass(VkRenderPass* pRenderPass)
+		{
+			if (*pRenderPass == VK_NULL_HANDLE)
+				return ATTEMPT_DELETE_NULLPTR;
+
+			vkDestroyRenderPass(device, *pRenderPass, allocator);
+
+			return SUCCESS;
+		}
+
+		BReturn VulkanAPI::CreateFramebuffer(uint32_t width, uint32_t height, Texture2D& renderTexture, VkRenderPass renderPass, VkFramebuffer* pFramebuffer)
+		{
+			VkImageView attachments[1]{ renderTexture.view };
+
+			VkFramebufferCreateInfo info{};
+			info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+			info.pNext = nullptr;
+			info.flags = 0;
+			info.attachmentCount = _countof(attachments);
+			info.pAttachments = attachments;
+			info.width = width;
+			info.height = height;
+			info.layers = 1;
+			info.renderPass = renderPass;
+
+			+vkCreateFramebuffer(device, &info, allocator, pFramebuffer);
+
+			return SUCCESS;
+		}
+
+		BReturn VulkanAPI::DestroyFramebuffer(VkFramebuffer* pFramebuffer)
+		{
+			if (*pFramebuffer == VK_NULL_HANDLE)
+				return ATTEMPT_DELETE_NULLPTR;
+
+			vkDestroyFramebuffer(device, *pFramebuffer, allocator);
+
+			return SUCCESS;
+		}
+
 
 	}
 }

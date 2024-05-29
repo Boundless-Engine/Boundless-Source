@@ -9,6 +9,7 @@
 
 /*! Status Codes for Engine Processes.. */
 enum BReturn {
+	ARGUMENT_ERROR		= -4,	//!< a required argument is incorrect.
 	ATTEMPT_DELETE_NULLPTR = -3,//!< trying to delete a nullptr, this is not allowed. 
 	HANDLE_IS_NULL = -2,		//!< the handle being requested has either not be initllized or is nullptr.
 	FAILURE = -1,				//!< the calling method has failed.

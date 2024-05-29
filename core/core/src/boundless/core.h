@@ -14,7 +14,11 @@
 #include "Event.h"
 #include "EventListener.h"
 #include "EventDispatcher.h"
-#include "RasterSurface.h"
+
+// graphics
+#include "GraphicsAPI.h"
+#include "FramebufferRenderer.h"
+
 //	BGui
 #include "GUI.h"
 #include "GUITheme.h"

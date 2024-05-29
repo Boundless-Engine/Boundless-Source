@@ -8,12 +8,12 @@
 namespace Boundless {
 	
 	namespace Graphics {
-		class VulkanSurface;
+		class VulkanAPI;
 
 		class VulkanGUI : public I::IGUI
 		{
 		public:
-			VulkanGUI(VulkanSurface* vk);
+			VulkanGUI(VulkanAPI* vk);
 			~VulkanGUI();
 
 			virtual void Begin() override;
@@ -25,7 +25,7 @@ namespace Boundless {
 			
 			
 		private:
-			VulkanSurface* vk;
+			VulkanAPI* vk;
 
 		};
 	}

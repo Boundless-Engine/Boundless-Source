@@ -15,6 +15,7 @@ project "Runtime"
       
       -- debug
       "../core/debug/logger/src",
+      "../core/debug/profiler/src",
       
       -- core 
       "../core/app/src",
@@ -37,6 +38,7 @@ project "Runtime"
    {
       -- DEBUG
       "BLogger",
+      "BProfiler",
       -- core
       "BApp",
       "BEvent",

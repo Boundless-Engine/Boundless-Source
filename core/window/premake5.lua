@@ -11,8 +11,9 @@ project "BWindow"
    {
       "src",
       "../../core/debug/logger/src",
-      "../events/src",
-      "../system/src",
+      "../../core/debug/profiler/src",
+      "../../core/events/src",
+      "../../core/system/src",
       "../../dependencies/GLFW/include/",
       "%{IncludeDir.VulkanSDK}"
    }
@@ -20,6 +21,7 @@ project "BWindow"
    links
    {
       "BLogger",
+      "BProfiler",
       "BEvent",
       "BSystem",
       "GLFW",

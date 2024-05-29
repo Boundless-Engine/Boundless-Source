@@ -11,12 +11,14 @@ project "BEvent"
    {
       "src",
       "../../core/debug/logger/src/",
+      "../../core/debug/profiler/src/",
       "../system/src",
     }
     
     links
     {
       "BLogger",
+      "BProfiler",
       "BSystem"
     }
 
