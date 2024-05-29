@@ -10,12 +10,14 @@ project "BInput"
    includedirs
    {
       "src",
+      "../../core/debug/logger/src",
       "../events/src",
       "../system/src"
    }
 
    links
    {
+      "BLogger",
       "BEvent",
       "BSystem",
    }
