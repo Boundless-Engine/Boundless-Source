@@ -3,6 +3,8 @@
 
 #include "backends/imgui_impl_vulkan.h"
 
+#include "Logger.h"
+
 static Graphics::VulkanSurface* vk;
 
 FramebufferRenderer::FramebufferRenderer(I::IRasterSurface* rasterSurface)

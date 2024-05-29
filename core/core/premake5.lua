@@ -10,7 +10,9 @@ project "BCore"
    includedirs
    {
       "src",
-
+      -- DEBUG
+      "../../core/debug/logger/src",
+      
       -- CORE
       "../../core/app/src",
       "../../core/events/src",
@@ -37,6 +39,7 @@ project "BCore"
         "BGraphics",
         "BGui",
         "BWindow",
+        "BLogger",
         -- SHARED
         "BSystem",
         -- DEPENDENCIES
@@ -45,7 +48,7 @@ project "BCore"
         -- GRAPHICS SDK
         "%{Library.Vulkan}"
    }
-   
+
 	targetdir ("../../build/" .. outputdir .. "/%{prj.name}")
 	objdir ("../../build/int/" .. outputdir .. "/%{prj.name}")
 	

@@ -10,14 +10,18 @@ project "BApp"
    includedirs
    {
       "src",
+      -- debug
+      "../debug/logger/src",
+
       "../system/src",
       "../events/src",
-      
+
       "../../dependencies/json/single_include/nlohmann",
    }
 
    links
    {
+         "BLogger",
         "BSystem",
         "BEvent"
    }

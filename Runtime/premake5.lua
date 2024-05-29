@@ -13,6 +13,9 @@ project "Runtime"
       -- plugins
       "../plugins/editor/src",
       
+      -- debug
+      "../core/debug/logger/src",
+      
       -- core 
       "../core/app/src",
       "../core/events/src",
@@ -32,6 +35,8 @@ project "Runtime"
 
    links
    {
+      -- DEBUG
+      "BLogger",
       -- core
       "BApp",
       "BEvent",

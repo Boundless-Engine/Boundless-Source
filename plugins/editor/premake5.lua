@@ -11,7 +11,7 @@ project "Boundless-Editor"
    {
         "src",
          -- debug
-        "../../core/debug/src",
+        "../../core/debug/logger/src",
          -- core
         "../../core/app/src",
         "../../core/events/src",
@@ -36,18 +36,6 @@ project "Boundless-Editor"
    links
    {
       "BCore",
-      -- -- core
-      --   "BSystem",
-      --   "BApp",
-      --   "BWindow",
-      --   "BEvent",
-      --   "BInput",
-      --   "BGui",
-      --   "BGraphics",
-      -- -- dependencies
-      --   "GLFW",
-      -- -- SDK 
-      --   "%{Library.Vulkan}"
    }
 
 	targetdir ("../../build/" .. outputdir .. "/%{prj.name}")

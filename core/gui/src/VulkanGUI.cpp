@@ -136,8 +136,6 @@ namespace Boundless {
 			ImDrawData* draw_data = nullptr;
 			draw_data = ImGui::GetDrawData();
 
-			VkResult err;
-
 			// get required objects from vulkan
 			VkInstance instance = VK_NULL_HANDLE;					vk->GetInstance(&instance);
 			//VkAllocationCallbacks allocator = {};					vk->GetAllocator(&allocator);

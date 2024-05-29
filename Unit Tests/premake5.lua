@@ -10,6 +10,7 @@ project "Unit Tests"
    includedirs
    {
       "src",
+      "../core/debug/logger/src",
       "../core/app/src",
       "../core/events/src",
       "../core/input/src",
@@ -22,6 +23,7 @@ project "Unit Tests"
 
    links
    {
+      "BLogger",
       "BUnitTestFramework",
       "BApp",
       "BEvent",

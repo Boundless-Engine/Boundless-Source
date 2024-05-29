@@ -10,12 +10,14 @@ project "BEvent"
    includedirs
    {
       "src",
+      "../../core/debug/logger/src/",
       "../system/src",
     }
     
     links
     {
-       "BSystem"
+      "BLogger",
+      "BSystem"
     }
 
     targetdir ("../../build/" .. outputdir .. "/%{prj.name}")

@@ -10,6 +10,7 @@ project "BWindow"
    includedirs
    {
       "src",
+      "../../core/debug/logger/src",
       "../events/src",
       "../system/src",
       "../../dependencies/GLFW/include/",
@@ -18,6 +19,7 @@ project "BWindow"
 
    links
    {
+      "BLogger",
       "BEvent",
       "BSystem",
       "GLFW",
