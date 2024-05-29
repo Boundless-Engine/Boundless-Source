@@ -17,9 +17,9 @@ project "BSystem"
    }
 
 
-   targetdir ("../../build/bin/" .. outputdir .. "/%{prj.name}")
-   objdir ("../../build/bin/" .. outputdir .. "/%{prj.name}")
-
+   targetdir ("../../build/" .. outputdir .. "/%{prj.name}")
+	objdir ("../../build/int/" .. outputdir .. "/%{prj.name}")
+	
    filter "system:windows"
       systemversion "latest"
       defines { "WL_PLATFORM_WINDOWS" }
