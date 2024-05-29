@@ -7,7 +7,7 @@
 *	\date		5/20/2024
 ******************************************************************************/
 
-#include "IWindow.h"
+#include "IWindow.h"	
 #include "Event.h"
 
 namespace Boundless {

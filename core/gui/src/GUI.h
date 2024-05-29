@@ -20,7 +20,6 @@ namespace Boundless {
 		namespace Gui
 		{
 		
-
 			static BReturn Create(I::IRasterSurface* rasterSurface, I::IGUI** pGUI, const std::string& themeFilepath, std::function<void()> menu = nullptr)
 			{
 #if			defined(NATIVE_WINDOW_HANDLES)

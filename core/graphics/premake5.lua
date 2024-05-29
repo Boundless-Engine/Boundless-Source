@@ -14,6 +14,7 @@ project "BGraphics"
       "../../core/window/src",
       "../../core/events/src",
       "../../dependencies/GLFW/include",
+      "../../dependencies/imgui/",
       "%{IncludeDir.VulkanSDK}"
    }
    
@@ -24,6 +25,7 @@ project "BGraphics"
       "ImGui",
       "BSystem",
       "GLFW",
+      "ImGui",
       "%{Library.Vulkan}"
    }
 

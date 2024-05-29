@@ -1,5 +1,12 @@
 #pragma once
 
+/*!****************************************************************************
+*	\file		ILayer.h
+*	\brief		Abstract Application Layer Interface.
+*	\author		Austin Lynes
+*	\date		5/28/2024
+******************************************************************************/
+
 #include "pch.h"
 
 #include "Event.h"
@@ -19,11 +26,12 @@ namespace Boundless {
 			//! optional Update loop function.
 			virtual void OnUpdate(){}
 
+			//! otional Render Loop Function
+			virtual void OnRender(){}
+
 			//! optional GUI draw loop function.
 			virtual void OnGUI(){}
 
-			//! optional event loop function.
-			virtual BReturn OnEvent(const IEvent* event) { return SUCCESS; };
 
 		};
 	}

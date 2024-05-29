@@ -27,7 +27,6 @@ project "Boundless-Editor"
          -- dependencies
          "../../dependencies/imgui/",
          "../../dependencies/GLFW/include",
-         
          "../../dependencies/json/single_include/nlohmann",
 
          -- graphics apis
@@ -36,7 +35,7 @@ project "Boundless-Editor"
 
    links
    {
-      "BCore"
+      "BCore",
       -- -- core
       --   "BSystem",
       --   "BApp",

@@ -27,7 +27,6 @@ project "Runtime"
       "../dependencies/imgui/",
       "../dependencies/json/single_include/nlohmann",
 
-
       "%{IncludeDir.VulkanSDK}",
    }
 
@@ -46,7 +45,6 @@ project "Runtime"
       -- dependencies 
       "GLFW",
       "ImGui",
-
       -- core
       "BCore",
       -- "plugins"

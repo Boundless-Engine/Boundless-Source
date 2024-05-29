@@ -235,7 +235,7 @@ namespace Boundless {
 			VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;		vk->GetPhysicalDevice(&physicalDevice);
 			uint32_t queueFamily = (uint32_t)-1;					vk->GetQueueFamily(&queueFamily);
 			VkQueue renderQueue = VK_NULL_HANDLE;					vk->GetQueue(&renderQueue);
-
+			VkDescriptorSet descriptorset = VK_NULL_HANDLE; 
 
 			ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
 

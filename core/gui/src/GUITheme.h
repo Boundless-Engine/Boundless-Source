@@ -7,6 +7,114 @@ namespace Boundless {
 	namespace Graphics {
 
 		struct GuiTheme {
+			GuiTheme() = default;
+			GuiTheme(ImGuiStyle& style) {
+
+				Global.Alpha = style.Alpha;
+				Global.DisabledAlpha = style.DisabledAlpha;
+				Window.Padding = style.WindowPadding;
+				Window.Rounding = style.WindowRounding;
+				Window.BorderSize = style.WindowBorderSize;
+				Window.MinSize = style.WindowMinSize;
+				Window.TitleAlign = style.WindowTitleAlign;
+				Window.MenuButtonPosition = style.WindowMenuButtonPosition;
+				ChildWindows.Rounding = style.ChildRounding;
+				ChildWindows.BorderSize = style.ChildBorderSize;
+				Popups.BorderSize = style.PopupBorderSize;
+				Popups.Rounding = style.PopupRounding;
+				Frame.Padding = style.FramePadding;
+				Frame.Rounding = style.FrameRounding;
+				Frame.BorderSize = style.FrameBorderSize;
+				Widget.ItemSpacing = style.ItemSpacing;
+				Widget.ItemInnerSpacing = style.ItemInnerSpacing;
+				Widget.CellPadding = style.CellPadding;
+				Widget.TouchExtraPadding = style.TouchExtraPadding;
+				Widget.IndentSpacing = style.IndentSpacing;
+				Widget.ColumnsMinSpacing = style.ColumnsMinSpacing;
+				Scrollbar.Size = style.ScrollbarSize;
+				Scrollbar.Rounding = style.ScrollbarRounding;
+				Scrollbar.Grab.MinSize = style.GrabMinSize;
+				Scrollbar.Grab.Rounding = style.GrabRounding;
+				Global.LogSliderDeadzone = style.LogSliderDeadzone;
+				Tab.Rounding = style.TabRounding;
+				Tab.BorderSize = style.TabBorderSize;
+				Tab.MinWidthForCloseButton = style.TabMinWidthForCloseButton;
+				Global.TableAngledHeadersAngle = style.TableAngledHeadersAngle;
+				Global.ColorButtonPosition = style.ColorButtonPosition;
+				Global.ButtonTextAlign = style.ButtonTextAlign;
+				Global.SelectableTextAlign = style.SelectableTextAlign;
+				Seperator.TextBorderSize = style.SeparatorTextBorderSize;
+				Seperator.TextAlign = style.SeparatorTextAlign;
+				Seperator.TextPadding = style.SeparatorTextPadding;
+				Global.DisplayWindowPadding = style.DisplayWindowPadding;
+				Global.DisplaySafeAreaPadding = style.DisplaySafeAreaPadding;
+				Dock.SeparatorSize = style.DockingSeparatorSize;
+				Global.MouseCursorScale = style.MouseCursorScale;
+				Global.AntiAliasedLines = style.AntiAliasedLines;
+				Global.AntiAliasedFill = style.AntiAliasedFill;
+				Global.AntiAliasedLinesUseTex = style.AntiAliasedLinesUseTex;
+				Global.CurveTessellationTol = style.CurveTessellationTol;
+				Global.CircleTessellationMaxError = style.CircleTessellationMaxError;
+
+				ImVec4* colors = style.Colors;
+
+				Text.Default = colors[ImGuiCol_Text];
+				Text.Disabled = colors[ImGuiCol_TextDisabled];
+				Window.Background = colors[ImGuiCol_WindowBg];
+				ChildWindows.Background = colors[ImGuiCol_ChildBg];
+				Popups.Background = colors[ImGuiCol_PopupBg];
+				Border.Color = colors[ImGuiCol_Border];
+				Border.ShadowColor = colors[ImGuiCol_BorderShadow];
+				Frame.Background = colors[ImGuiCol_FrameBg];
+				Frame.Hover = colors[ImGuiCol_FrameBgHovered];
+				Frame.Active = colors[ImGuiCol_FrameBgActive];
+				Title.Background = colors[ImGuiCol_TitleBg];
+				Title.Active = colors[ImGuiCol_TitleBgActive];
+				Title.Collapsed = colors[ImGuiCol_TitleBgCollapsed];
+				Menubar.Background = colors[ImGuiCol_MenuBarBg];
+				Scrollbar.Background = colors[ImGuiCol_ScrollbarBg];
+				Scrollbar.Grab.Background = colors[ImGuiCol_ScrollbarGrab];
+				Scrollbar.Grab.Hover = colors[ImGuiCol_ScrollbarGrabHovered];
+				Scrollbar.Grab.Active = colors[ImGuiCol_ScrollbarGrabActive];
+				Inputs.CheckMark.Foreground = colors[ImGuiCol_CheckMark];
+				Inputs.Slider.Grab = colors[ImGuiCol_SliderGrab];
+				Inputs.Slider.GrabActive = colors[ImGuiCol_SliderGrabActive];
+				Inputs.Button.Background = colors[ImGuiCol_Button];
+				Inputs.Button.Hover = colors[ImGuiCol_ButtonHovered];
+				Inputs.Button.Active = colors[ImGuiCol_ButtonActive];
+				Header.Background = colors[ImGuiCol_Header];
+				Header.Hover = colors[ImGuiCol_HeaderHovered];
+				Header.Active = colors[ImGuiCol_HeaderActive];
+				Seperator.Background = colors[ImGuiCol_Separator];
+				Seperator.Hover = colors[ImGuiCol_SeparatorHovered];
+				Seperator.Active = colors[ImGuiCol_SeparatorActive];
+				ResizeGrip.Background = colors[ImGuiCol_ResizeGrip];
+				ResizeGrip.Hover = colors[ImGuiCol_ResizeGripHovered];
+				ResizeGrip.Active = colors[ImGuiCol_ResizeGripActive];
+				Tab.Background = colors[ImGuiCol_Tab];
+				Tab.Hover = colors[ImGuiCol_TabHovered];
+				Tab.Active = colors[ImGuiCol_TabActive];
+				Tab.Unfocused = colors[ImGuiCol_TabUnfocused];
+				Tab.UnfocusedActive = colors[ImGuiCol_TabUnfocusedActive];
+				Dock.Preview = colors[ImGuiCol_DockingPreview];
+				Dock.EmptyBG = colors[ImGuiCol_DockingEmptyBg];
+				Graph.Lines.Background = colors[ImGuiCol_PlotLines];
+				Graph.Lines.Hover = colors[ImGuiCol_PlotLinesHovered];
+				Graph.Bars.Background = colors[ImGuiCol_PlotHistogram];
+				Graph.Bars.Hover = colors[ImGuiCol_PlotHistogramHovered];
+				Table.HeaderBG = colors[ImGuiCol_TableHeaderBg];
+				Table.BorderStrong = colors[ImGuiCol_TableBorderStrong];
+				Table.BorderLight = colors[ImGuiCol_TableBorderLight];
+				Table.RowBG = colors[ImGuiCol_TableRowBg];
+				Table.RowAltBG = colors[ImGuiCol_TableRowBgAlt];
+				Text.Selected = colors[ImGuiCol_TextSelectedBg];
+				DragNDrop.Target = colors[ImGuiCol_DragDropTarget];
+				Navigation.Highlight = colors[ImGuiCol_NavHighlight];
+				Navigation.WindowHighlight = colors[ImGuiCol_NavWindowingHighlight];
+				Navigation.WindowDim = colors[ImGuiCol_NavWindowingDimBg];
+				Modal.WindowDim = colors[ImGuiCol_ModalWindowDimBg];
+
+			}
 
 			struct {
 				ImVec4 Default = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
@@ -228,18 +336,6 @@ namespace nlohmann {
 			j.at("w").get_to(v.w);
 		}
 	};
-	/*template<>
-	struct adl_serializer<ImGuiDir>
-	{
-		static void to_json(json& j, const ImGuiDir& dir)
-		{
-			j = json { "Direction", dir  };
-		};
-
-		static void from_json(const json& j, ImGuiDir& dir) {
-			j.at("Direction").get_to<ImGuiDir>(dir);
-		}
-	};*/
 
 	template<>
 	struct adl_serializer<Boundless::Graphics::GuiTheme>

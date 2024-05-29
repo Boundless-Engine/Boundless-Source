@@ -36,6 +36,33 @@ namespace Boundless {
 				return SUCCESS;
 			}
 
+			BReturn Theme::Save(const std::string& filepath, ImGuiStyle& style) {
+
+				if (!std::filesystem::exists(filepath))
+				{
+					auto dir = filepath.substr(0, filepath.find_last_of("/") + 1);
+					std::filesystem::create_directories(dir);
+				}
+
+				std::ofstream file(filepath);
+
+				auto theme = GuiTheme(style);
+
+				nlohmann::json j = theme;
+
+				if (file.is_open()) {
+					file << j.dump(4);
+					file.close();
+				}
+				else {
+					printf("could not save to filepath: %s as the filepath or file does not exist...", filepath.c_str());
+					return FAILURE;
+				}
+
+				return SUCCESS;
+			}
+
+
 			BReturn Theme::Load(const std::string& filepath, GuiTheme* pTheme)
 			{
 				std::ifstream file(filepath);

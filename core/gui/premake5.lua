@@ -22,7 +22,7 @@ project "BGui"
       "../../dependencies/imgui/",
       "../../dependencies/GLFW/include/",
       "../../dependencies/json/single_include/nlohmann",
-      
+
       -- graphics
       "%{IncludeDir.VulkanSDK}",
    }

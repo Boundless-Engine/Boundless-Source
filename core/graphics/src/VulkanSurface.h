@@ -23,6 +23,14 @@ namespace Boundless {
 		
 		void operator +(const VkResult res);
 
+		struct Texture2D {
+			VkImage image;
+			VkDeviceMemory memory;
+			VkImageView view;
+			VkSampler sampler;
+			VkDescriptorSet descriptorSet;
+		};
+
 		class VulkanSurface 
 			: public I::IRasterSurface
 		{
@@ -55,23 +63,33 @@ namespace Boundless {
 
 			BReturn GetCommandBuffer(std::vector<VkCommandBuffer>& buffers, int idx);
 
+			BReturn GetCommandPool(VkCommandPool* pPool);
 			BReturn GetQueue(VkQueue* pQueue);
 			BReturn GetSurface(VkSurfaceKHR* pSurface);
 			BReturn GetDescriptorPool(VkDescriptorPool* pDescriptorPool);
 			BReturn GetPipelineCache(VkPipelineCache* pipelineCache);
 
+			BReturn CreateTexture2D(void* data, int width, int height, int bits, int channels, Texture2D& image);
+			BReturn DestroyTexture2D(Texture2D& image);
+
+			BReturn BeginSingleTimeCommand(VkCommandPool commandPool, VkCommandBuffer& pCommandBuffer);
+			BReturn EndSingleTimeCommand(VkCommandPool commandPool, VkQueue queue, VkCommandBuffer& pCommandBuffer);
+
+		protected:
+			uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 		private:
 			VkAllocationCallbacks*		allocator = NULL;
-			VkInstance					instance = VK_NULL_HANDLE;
-			VkPhysicalDevice			physicalDevice = VK_NULL_HANDLE;
-			VkDevice					device = VK_NULL_HANDLE;
-			uint32_t					queueFamily = (uint32_t)-1;
-			VkQueue						graphicsQueue = VK_NULL_HANDLE;
-			VkDebugReportCallbackEXT	debugReport = VK_NULL_HANDLE;
+			VkInstance					instance = VK_NULL_HANDLE;			
+			VkPhysicalDevice			physicalDevice = VK_NULL_HANDLE;	
+			VkDevice					device = VK_NULL_HANDLE;			
+			VkDebugReportCallbackEXT	debugReport = VK_NULL_HANDLE;		
+			uint32_t					queueFamily = (uint32_t)-1;			
+			VkQueue						graphicsQueue = VK_NULL_HANDLE;		
 			VkPipelineCache				pipelineCache = VK_NULL_HANDLE;
 			VkDescriptorPool			descriptorPool = VK_NULL_HANDLE;
-			VkSurfaceKHR				surface = VK_NULL_HANDLE;
+			VkSurfaceKHR				surface = VK_NULL_HANDLE;			
 			int							MinImageCount = 2;
+			VkCommandPool				commandPool = VK_NULL_HANDLE;
 
 			// Per-frame-in-flight
 			std::vector<std::vector<VkCommandBuffer>> commandBuffers;
