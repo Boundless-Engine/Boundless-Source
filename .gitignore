@@ -45,3 +45,4 @@
 
 /devops/*
 /deploy/*
+.dev/notebooks/

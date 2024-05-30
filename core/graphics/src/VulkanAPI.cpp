@@ -2,6 +2,7 @@
 
 #include "backends/imgui_impl_vulkan.h"
 
+
 #include "Profiler.h"
 
 namespace Boundless {
@@ -174,6 +175,9 @@ namespace Boundless {
 
 			// Create Logical Device (with 1 queue)
 			{
+				VkPhysicalDeviceFeatures deviceFeatures;
+				vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
+
 				int device_extension_count = 1;
 				const char* device_extensions[] = { "VK_KHR_swapchain" };
 				const float queue_priority[] = { 1.0f };
@@ -182,12 +186,23 @@ namespace Boundless {
 				queue_info[0].queueFamilyIndex = queueFamily;
 				queue_info[0].queueCount = 1;
 				queue_info[0].pQueuePriorities = queue_priority;
+				
+				VkPhysicalDeviceFeatures enabledFeatures{};
+				
+				if (deviceFeatures.fillModeNonSolid)
+					enabledFeatures.fillModeNonSolid = VK_TRUE;
+
+				
 				VkDeviceCreateInfo create_info = {};
 				create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 				create_info.queueCreateInfoCount = sizeof(queue_info) / sizeof(queue_info[0]);
 				create_info.pQueueCreateInfos = queue_info;
 				create_info.enabledExtensionCount = device_extension_count;
 				create_info.ppEnabledExtensionNames = device_extensions;
+				create_info.enabledExtensionCount = 1;
+				create_info.pEnabledFeatures = &enabledFeatures;
+
+
 				+vkCreateDevice(physicalDevice, &create_info, allocator, &device);
 				vkGetDeviceQueue(device, queueFamily, 0, &graphicsQueue);
 			}
@@ -252,8 +267,6 @@ namespace Boundless {
 
 		}
 	
-
-
 		BReturn VulkanAPI::GetInstance(VkInstance* pInstance)
 		{
 			*pInstance = instance;
@@ -345,6 +358,7 @@ namespace Boundless {
 
 			return SUCCESS;
 		}
+		
 		BReturn VulkanAPI::GetCommandPool(VkCommandPool* pPool) {
 			if (commandPool == nullptr)
 				return FAILURE;
@@ -353,7 +367,6 @@ namespace Boundless {
 
 			return SUCCESS;
 		}
-
 
 		BReturn VulkanAPI::BeginSingleTimeCommand(VkCommandPool commandPool, VkCommandBuffer& pCommandBuffer) {
 			VkCommandBufferAllocateInfo allocInfo = {};
@@ -401,6 +414,131 @@ namespace Boundless {
 			return SUCCESS;
 		}
 
+		BReturn VulkanAPI::CreatePipelineLayout(VkPipelineLayout* pPipelineLayout)
+		{
+			VkPipelineLayoutCreateInfo info{};
+			info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+			info.pNext = nullptr;
+			info.flags = 0;
+
+			+vkCreatePipelineLayout(device, &info, allocator, pPipelineLayout);
+
+			return SUCCESS;
+		}
+
+		BReturn VulkanAPI::CreateGraphicsPipeline(
+			uint32_t                                        stageCount,
+			const VkPipelineShaderStageCreateInfo*			pStages,
+			const VkPipelineVertexInputStateCreateInfo*		pVertexInputState,
+			const VkPipelineInputAssemblyStateCreateInfo*	pInputAssemblyState,
+			const VkPipelineTessellationStateCreateInfo*	pTessellationState,
+			const VkPipelineViewportStateCreateInfo*		pViewportState,
+			const VkPipelineRasterizationStateCreateInfo*	pRasterizationState,
+			const VkPipelineMultisampleStateCreateInfo*		pMultisampleState,
+			const VkPipelineDepthStencilStateCreateInfo*	pDepthStencilState,
+			const VkPipelineColorBlendStateCreateInfo*		pColorBlendState,
+			const VkPipelineDynamicStateCreateInfo*			pDynamicState,
+			VkPipelineLayout                                layout,
+			VkRenderPass                                    renderPass,
+			uint32_t										subpass,
+			VkPipeline                                      basePipelineHandle,
+			int32_t                                         basePipelineIndex,
+			VkPipeline* pPipeline)
+		{
+			VkGraphicsPipelineCreateInfo info{ };
+			info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+			info.pNext = nullptr;
+			info.flags = 0;
+			info.stageCount = stageCount;
+			info.pStages = pStages;
+			info.pVertexInputState = pVertexInputState;
+			info.pInputAssemblyState = pInputAssemblyState;
+			info.pViewportState = pViewportState;
+			info.pRasterizationState = pRasterizationState;
+			info.pMultisampleState = pMultisampleState;
+			info.pDepthStencilState = pDepthStencilState;
+			info.pColorBlendState = pColorBlendState;
+			info.layout = layout;
+			info.renderPass = renderPass;
+			info.subpass = subpass;
+			info.basePipelineHandle = basePipelineHandle;
+			info.basePipelineIndex = basePipelineIndex;
+
+			+vkCreateGraphicsPipelines(device, nullptr, 1, &info, allocator, pPipeline);
+
+			return SUCCESS;
+		}
+		shaderc_shader_kind  DetermineShaderStage(ShaderStage t) {
+			shaderc_shader_kind stage;
+			if (t == ShaderStage::Vertex)
+				stage = shaderc_vertex_shader;
+			else if (t == ShaderStage::Fragment)
+				stage = shaderc_fragment_shader;
+			else if (t == ShaderStage::Geometry)
+				stage = shaderc_geometry_shader;
+			else if (t == ShaderStage::Tesselation)
+				stage = shaderc_tess_evaluation_shader;
+			else
+				throw std::runtime_error("ShaderType is Unrecognized");
+
+			return stage;
+		}
+		BReturn VulkanAPI::CompileShader(const std::string& filepath, std::vector<VkShaderModule>& modules, int stagesCount, const ShaderStage* pStages)
+		{
+			// read file.
+			std::ifstream file(filepath, std::ios::ate);
+			if (!file.is_open())
+				return FAILURE;
+
+			auto fileSize = file.tellg();
+			file.seekg(0);
+			std::vector<char> buffer(fileSize);
+			file.read(buffer.data(), fileSize);
+			file.close();
+
+			// compile glsl to spirv
+			
+			std::string source = buffer.data();
+
+			modules.resize(stagesCount);
+
+			for (int i = 0; i < stagesCount; i++)
+			{
+				shaderc::Compiler compiler;
+				shaderc::CompileOptions options;
+				
+				shaderc_shader_kind stage = DetermineShaderStage(pStages[i]);
+
+				if (stage == shaderc_vertex_shader) {
+					options.AddMacroDefinition("VERTEX_SHADER");
+				}
+				else if (stage == shaderc_fragment_shader) {
+					options.AddMacroDefinition("FRAGMENT_SHADER");
+				}
+
+				shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(source, stage, filepath.c_str(), options);
+
+				if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
+					//Debug::Log("Failed To Compile Shader to SPIR-V: %s", filepath.c_str());
+					std::cout << result.GetErrorMessage() << std::endl;
+					return FAILURE;
+				}
+
+				std::vector<uint32_t> spirv{ result.begin(), result.end() };
+
+				VkShaderModuleCreateInfo info{};
+				info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+				info.pNext = nullptr;
+				info.flags = 0;
+				info.codeSize = sizeof(uint32_t) * spirv.size();
+				info.pCode = spirv.data();
+
+				+vkCreateShaderModule(device, &info, allocator, &modules[i]);
+			}
+
+			// create shader module
+			return SUCCESS;
+		}
 
 		uint32_t VulkanAPI::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
 			VkPhysicalDeviceMemoryProperties memProperties;
@@ -415,7 +553,104 @@ namespace Boundless {
 			throw std::runtime_error("failed to find suitable memory type!");
 		}
 
-		BReturn VulkanAPI::CreateTexture2D(void* data, int width, int height, Texture2D::MSAA samples, Texture2D::BitsPerPixel bits, Texture2D::ColorChannels channels, Texture2D& image)
+		BReturn VulkanAPI::CreateRenderTexture(uint32_t width, uint32_t height, Texture2D::MSAA samples, Texture2D::BitsPerPixel bits, Texture2D::ColorChannels channels, Texture2D& image)
+		{
+			return CreateTexture2D(nullptr, width, height, samples, bits, channels, image);
+		}
+
+		BReturn VulkanAPI::FreeBuffer(Buffer& buffer)
+		{
+			vkDestroyBuffer(device, buffer.buffer, allocator);
+			vkFreeMemory(device, buffer.memory, allocator);
+
+			return SUCCESS;
+		}
+
+		BReturn VulkanAPI::CopyToBuffer(void* data, VkDeviceSize bufferSize, Buffer& buffer) {
+
+			void* mappedData;
+			vkMapMemory(device, buffer.memory, 0, bufferSize, 0, &mappedData);
+			memcpy(mappedData, data, static_cast<size_t>(bufferSize));
+			vkUnmapMemory(device, buffer.memory);
+
+			return SUCCESS;
+		}
+
+		BReturn VulkanAPI::CopyBufferToImage(Buffer& buffer, Texture2D& image)
+		{
+
+			// Transition image layout and copy staging buffer to the image
+			VkCommandBuffer cmd;
+			if (BeginSingleTimeCommand(commandPool, cmd) != SUCCESS) {
+				return FAILURE;
+			}
+
+			VkImageMemoryBarrier barrier{};
+			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.image = image.image;
+			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			barrier.subresourceRange.baseMipLevel = 0;
+			barrier.subresourceRange.levelCount = 1;
+			barrier.subresourceRange.baseArrayLayer = 0;
+			barrier.subresourceRange.layerCount = 1;
+			barrier.srcAccessMask = 0;
+			barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+			vkCmdPipelineBarrier(
+				cmd,
+				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+				0,
+				0, nullptr,
+				0, nullptr,
+				1, &barrier
+			);
+
+			VkBufferImageCopy region{};
+			region.bufferOffset = 0;
+			region.bufferRowLength = 0;
+			region.bufferImageHeight = 0;
+			region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			region.imageSubresource.mipLevel = 0;
+			region.imageSubresource.baseArrayLayer = 0;
+			region.imageSubresource.layerCount = 1;
+			region.imageOffset = { 0, 0, 0 };
+			region.imageExtent = { image.width, image.height, 1 };
+
+			vkCmdCopyBufferToImage(
+				cmd,
+				buffer.buffer,
+				image.image,
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+				1,
+				&region
+			);
+
+			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+			vkCmdPipelineBarrier(
+				cmd,
+				VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+				0,
+				0, nullptr,
+				0, nullptr,
+				1, &barrier
+			);
+
+			if (EndSingleTimeCommand(commandPool, graphicsQueue, cmd) != SUCCESS) {
+				return FAILURE;
+			}
+
+			return SUCCESS;
+		}
+
+		BReturn VulkanAPI::CreateTexture2D(void* data, uint32_t width, uint32_t height, Texture2D::MSAA samples, Texture2D::BitsPerPixel bits, Texture2D::ColorChannels channels, Texture2D& image)
 		{
 			image.width = width;
 			image.height = height;
@@ -461,118 +696,49 @@ namespace Boundless {
 				+vkBindImageMemory(device, image.image, image.memory, 0);
 			}
 
-			// if data exists buffer data 
+			// buffer default data or texture data
 			{
-				// If data exists, buffer data
+				// If data exists, the use wants to upload texture data.
+				// take care of this.
 				if (data) {
+
 					// Create a staging buffer
-					VkBuffer stagingBuffer;
-					VkDeviceMemory stagingBufferMemory;
-					VkDeviceSize imageSize = width * height * to_bytes_per_pixel((int)bits, (int)channels);
+					Buffer staging{};
+					int size = width * height * to_bytes_per_pixel((int)bits, (int)channels);
 
-					VkBufferCreateInfo bufferInfo{};
-					bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-					bufferInfo.size = imageSize;
-					bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-					bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+					AllocateBuffer<BufferType::Staging>(size, staging);
+					// Copy data to Staging Buffer
+					CopyToBuffer(data, size, staging);
 
-					if (vkCreateBuffer(device, &bufferInfo, allocator, &stagingBuffer) != VK_SUCCESS) {
-						return FAILURE;
-					}
-
-					VkMemoryRequirements memRequirements;
-					vkGetBufferMemoryRequirements(device, stagingBuffer, &memRequirements);
-
-					VkMemoryAllocateInfo allocInfo{};
-					allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-					allocInfo.allocationSize = memRequirements.size;
-					allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-					if (vkAllocateMemory(device, &allocInfo, allocator, &stagingBufferMemory) != VK_SUCCESS) {
-						return FAILURE;
-					}
-
-					if (vkBindBufferMemory(device, stagingBuffer, stagingBufferMemory, 0) != VK_SUCCESS) {
-						return FAILURE;
-					}
-
-					// Map memory and copy data to the staging buffer
-					void* mappedData;
-					vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &mappedData);
-					memcpy(mappedData, data, static_cast<size_t>(imageSize));
-					vkUnmapMemory(device, stagingBufferMemory);
-
-					// Transition image layout and copy staging buffer to the image
-					VkCommandBuffer cmd;
-					if (BeginSingleTimeCommand(commandPool, cmd) != SUCCESS) {
-						return FAILURE;
-					}
-
-					VkImageMemoryBarrier barrier{};
-					barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-					barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-					barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-					barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-					barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-					barrier.image = image.image;
-					barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-					barrier.subresourceRange.baseMipLevel = 0;
-					barrier.subresourceRange.levelCount = 1;
-					barrier.subresourceRange.baseArrayLayer = 0;
-					barrier.subresourceRange.layerCount = 1;
-					barrier.srcAccessMask = 0;
-					barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-					vkCmdPipelineBarrier(
-						cmd,
-						VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-						0,
-						0, nullptr,
-						0, nullptr,
-						1, &barrier
-					);
-
-					VkBufferImageCopy region{};
-					region.bufferOffset = 0;
-					region.bufferRowLength = 0;
-					region.bufferImageHeight = 0;
-					region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-					region.imageSubresource.mipLevel = 0;
-					region.imageSubresource.baseArrayLayer = 0;
-					region.imageSubresource.layerCount = 1;
-					region.imageOffset = { 0, 0, 0 };
-					region.imageExtent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
-
-					vkCmdCopyBufferToImage(
-						cmd,
-						stagingBuffer,
-						image.image,
-						VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-						1,
-						&region
-					);
-
-					barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-					barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-					barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-					barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-					vkCmdPipelineBarrier(
-						cmd,
-						VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-						0,
-						0, nullptr,
-						0, nullptr,
-						1, &barrier
-					);
-
-					if (EndSingleTimeCommand(commandPool, graphicsQueue, cmd) != SUCCESS) {
-						return FAILURE;
-					}
+					// Copy Staging Buffer to Image.
+					CopyBufferToImage(staging, image);
 
 					// Clean up staging buffer
-					vkDestroyBuffer(device, stagingBuffer, allocator);
-					vkFreeMemory(device, stagingBufferMemory, allocator);
+					FreeBuffer(staging);
+				}
+				else {
+					// no data is passed in.. we need some dummy data
+					size_t count = width * height;
+					uint32_t* dummy_data = new uint32_t[count]{ 0x000000FF };
+					for (int i = 0; i < width * height; i++) dummy_data[i] = 0xFF000000;
+					
+					// Create Staging Buffer
+					Buffer staging{};
+					int size = width * height * to_bytes_per_pixel((int)bits, (int)channels);
+					
+					AllocateBuffer<BufferType::Staging>(size, staging);
+					
+					// Copy data to Staging Buffer
+					CopyToBuffer(dummy_data, size, staging);
+
+					// Copy Staging Buffer to Image.
+					CopyBufferToImage(staging, image);
+
+					// Clean up staging buffer
+					FreeBuffer(staging);
+
+					// delte unnecissary data, its on the GPU now.
+					delete[] dummy_data;
 				}
 			}
 

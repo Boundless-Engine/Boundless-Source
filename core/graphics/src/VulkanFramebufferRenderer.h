@@ -29,6 +29,11 @@ namespace Boundless {
 
 				virtual void Render() override;
 
+				virtual int Width() override;
+				virtual int Height() override;
+
+				virtual void OnResize(int nwidth, int nheight) override;
+
 				void* GetRenderTexture() override;
 			};
 		}

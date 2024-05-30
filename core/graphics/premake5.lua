@@ -17,7 +17,9 @@ project "BGraphics"
       "../../core/events/src",
       "../../dependencies/GLFW/include",
       "../../dependencies/imgui/",
-      "%{IncludeDir.VulkanSDK}"
+      "../../dependencies/glm/",
+
+      "%{IncludeDir.VulkanSDK}",
    }
    
    links
@@ -30,7 +32,9 @@ project "BGraphics"
       "BSystem",
       "GLFW",
       "ImGui",
-      "%{Library.Vulkan}"
+
+      "%{Library.Vulkan}",
+      "%{Library.shaderc_shared}"
    }
 
 

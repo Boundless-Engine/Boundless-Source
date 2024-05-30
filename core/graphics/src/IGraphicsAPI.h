@@ -11,8 +11,8 @@ namespace Boundless {
 			
 			virtual ~IGraphicsAPI() {}
 
-			int Width() { return win->Width(); }
-			int Height() { return win->Height(); }
+			uint32_t Width()  {	return (uint32_t) win->Width(); }
+			uint32_t Height() { return (uint32_t) win->Height(); }
 
 			BReturn GetWindowHandle(void** pHandle)
 			{

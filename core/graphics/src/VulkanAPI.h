@@ -16,6 +16,7 @@
 #include <vulkan/vulkan.h>
 
 
+
 namespace Boundless {
 
 	namespace Graphics {
@@ -57,8 +58,9 @@ namespace Boundless {
 			VkSampleCountFlagBits samples;
 			VkFormat format;
 
-			int width;
-			int height;
+			uint32_t width;
+			uint32_t height;
+
 			BitsPerPixel bits;
 			ColorChannels channels;
 
@@ -119,7 +121,26 @@ namespace Boundless {
 			}
 		};
 
+		struct Buffer {
+			VkBuffer buffer;
+			VkDeviceMemory memory;
+			VkDeviceSize size;
+		
+		
+		};
 
+		enum class BufferType {
+			Staging,
+			Vertex,
+			Index,
+		};
+
+		enum class ShaderStage {
+			Vertex,
+			Fragment,
+			Geometry,
+			Tesselation
+		};
 
 		class VulkanAPI 
 			: public I::IGraphicsAPI
@@ -157,7 +178,11 @@ namespace Boundless {
 			BReturn GetDescriptorPool(VkDescriptorPool* pDescriptorPool);
 			BReturn GetPipelineCache(VkPipelineCache* pipelineCache);
 
-			BReturn CreateTexture2D(void* data, int width, int height, Texture2D::MSAA samples, Texture2D::BitsPerPixel bits, Texture2D::ColorChannels channels, Texture2D& image);
+
+			// RESOURCES
+			BReturn CreateRenderTexture(uint32_t width, uint32_t height, Texture2D::MSAA samples, Texture2D::BitsPerPixel bits, Texture2D::ColorChannels channels, Texture2D& image);
+
+			BReturn CreateTexture2D(void* data, uint32_t width, uint32_t height, Texture2D::MSAA samples, Texture2D::BitsPerPixel bits, Texture2D::ColorChannels channels, Texture2D& image);
 			BReturn DestroyTexture2D(Texture2D& image);
 
 			BReturn CreateRenderPass(Texture2D& renderTexture, VkRenderPass* pRenderPass);
@@ -165,8 +190,60 @@ namespace Boundless {
 			BReturn CreateFramebuffer(uint32_t width, uint32_t height, Texture2D& renderTexture, VkRenderPass renderPass, VkFramebuffer* pFramebuffer);
 			BReturn DestroyFramebuffer(VkFramebuffer* pFramebuffer);
 
+
+			// Utillitys
 			BReturn BeginSingleTimeCommand(VkCommandPool commandPool, VkCommandBuffer& pCommandBuffer);
 			BReturn EndSingleTimeCommand(VkCommandPool commandPool, VkQueue queue, VkCommandBuffer& pCommandBuffer);
+			
+			// Buffers
+			template<BufferType T>
+			BReturn AllocateBuffer(VkDeviceSize bufferSize, Buffer& buffer);
+			BReturn FreeBuffer(Buffer& buffer);
+
+			BReturn CopyToBuffer(void* data, VkDeviceSize size, Buffer& buffer);
+			BReturn CopyBufferToImage(Buffer& buffer, Texture2D& image);
+			
+			BReturn CompileShader(const std::string& filepath, std::vector<VkShaderModule>& modules, int stagesCount, const ShaderStage* pStages);
+			
+			/*!
+			* @param [ i n] required stageCount
+			* @param [ in ] required pStages
+			* @param [ in ] required VertexInputState
+			* @param [ in ] required pInputAssemblyState
+			* @param [ in ] required pTessellationState
+			* @param [ in ] required pViewportState
+			* @param [ in ] required pRasterizationState
+			* @param [ in ] required pMultisampleState
+			* @param [ in ] required pDepthStencilState
+			* @param [ in ] required pColorBlendState
+			* @param [ in ] required pDynamicState
+			* @param [ in ] required layout
+			* @param [ in ] required renderPass
+			* @param [ in ] required subpass
+			* @param [ in ] optional basePipelineHandl,
+			* @param [ in ] optional basePipelineIndex
+			* @param [ out ] required pPipeline
+			*/
+			BReturn CreateGraphicsPipeline(
+				uint32_t                                        stageCount,
+				const VkPipelineShaderStageCreateInfo*			pStages,
+				const VkPipelineVertexInputStateCreateInfo*		VertexInputState,
+				const VkPipelineInputAssemblyStateCreateInfo*	pInputAssemblyState,
+				const VkPipelineTessellationStateCreateInfo*	pTessellationState,
+				const VkPipelineViewportStateCreateInfo*		pViewportState,
+				const VkPipelineRasterizationStateCreateInfo*	pRasterizationState,
+				const VkPipelineMultisampleStateCreateInfo*		pMultisampleState,
+				const VkPipelineDepthStencilStateCreateInfo*	pDepthStencilState,
+				const VkPipelineColorBlendStateCreateInfo*		pColorBlendState,
+				const VkPipelineDynamicStateCreateInfo*			pDynamicState,
+				VkPipelineLayout                                layout,
+				VkRenderPass                                    renderPass,
+				uint32_t										subpass,
+				VkPipeline                                      basePipelineHandle,
+				int32_t                                         basePipelineIndex,
+				VkPipeline*										pPipeline);
+
+			BReturn CreatePipelineLayout(VkPipelineLayout* pPipelineLayout);
 
 		protected:
 			uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -194,3 +271,5 @@ namespace Boundless {
 		};
 	}
 }
+
+#include "VulkanAPI.impl.h"

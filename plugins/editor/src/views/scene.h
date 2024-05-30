@@ -24,6 +24,8 @@ public:
 		Rendering::DestroyFramebufferRenderer(&renderer);
 		return SUCCESS;
 	}
+	virtual void OnUpdate() override {
+	}
 
 	virtual void OnRender() override {
 		renderer->Render();
@@ -32,6 +34,10 @@ public:
 	virtual void OnGUI() override
 	{
 		ImGui::Begin("Scene");
+	
+		ImVec2 size = ImGui::GetWindowSize();
+		Rendering::ResizeFramebuffer(size.x, size.y, &renderer);
+
 		ImTextureID sceneTexture = reinterpret_cast<ImTextureID>(renderer->GetRenderTexture());
 		
 		ImVec2 region = ImGui::GetContentRegionAvail();

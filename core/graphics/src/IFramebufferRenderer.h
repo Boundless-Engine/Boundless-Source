@@ -9,7 +9,14 @@ namespace Boundless {
 		{
 		public:
 			virtual ~IFramebufferRenderer() {};
+			
+			virtual int Width()  = 0;
+			virtual int Height() = 0;
+			
+			virtual void OnResize(int nwidth, int nheight) = 0;
+
 			virtual void* GetRenderTexture() = 0;
+
 		};
 	}
 }
