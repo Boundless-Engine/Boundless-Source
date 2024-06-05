@@ -17,7 +17,8 @@ namespace Boundless {
 	namespace I {
 		class IRenderer : public IEventListener {
 		public:
-			virtual ~IRenderer() = default;
+			IRenderer() { EventDispatcher::AddListener(this); }
+			virtual ~IRenderer() { EventDispatcher::RemoveListener(this); };
 
 			virtual void Initillize() = 0;
 			virtual void Shutdown() = 0;

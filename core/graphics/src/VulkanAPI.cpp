@@ -71,7 +71,7 @@ namespace Boundless {
 			if (err == 0)
 				return;
 			
-			fprintf(stderr, "[vulkan] Error: VkResult = %s\n", vkResultToString(err).c_str());
+			fprintf(stderr, "\n[vulkan]\t\033[38;2;255;0;0mError:\033[0m VkResult = \n%s\n", vkResultToString(err).c_str());
 
 			if (err < 0)
 				abort();
@@ -207,30 +207,7 @@ namespace Boundless {
 				vkGetDeviceQueue(device, queueFamily, 0, &graphicsQueue);
 			}
 
-			// Create Descriptor Pool
-			{
-				VkDescriptorPoolSize pool_sizes[] =
-				{
-					{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-					{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-					{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
-					{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
-					{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
-					{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
-					{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-					{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-					{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
-					{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-					{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
-				};
-				VkDescriptorPoolCreateInfo pool_info = {};
-				pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-				pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-				pool_info.maxSets = 1000 * _countof(pool_sizes);
-				pool_info.poolSizeCount = (uint32_t)_countof(pool_sizes);
-				pool_info.pPoolSizes = pool_sizes; 
-				+vkCreateDescriptorPool(device, &pool_info, allocator, &descriptorPool);
-			}
+			
 
 			{
 				VkCommandPoolCreateInfo info{};
@@ -254,7 +231,7 @@ namespace Boundless {
 			fn_profiler("VulkanSurface::~VulkanSurface()");
 
 			vkDestroyCommandPool(device, commandPool, allocator);
-			vkDestroyDescriptorPool(device, descriptorPool, allocator);
+			//vkDestroyDescriptorPool(device, descriptorPool, allocator);
 
 #ifdef VULKAN_DEBUG_REPORT
 			// Remove the debug report callback
@@ -339,15 +316,63 @@ namespace Boundless {
 			return SUCCESS;
 		}
 
-		BReturn VulkanAPI::GetDescriptorPool(VkDescriptorPool* pDescriptorPool)
+		BReturn VulkanAPI::CreateDescriptorPool(uint32_t maxSets, std::vector<VkDescriptorPoolSize>& sizes, VkDescriptorPool* pDescriptorPool)
 		{
-			if (descriptorPool == nullptr)
-				return FAILURE;
+			VkDescriptorPoolCreateInfo info{};
+			info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+			info.pNext = nullptr;
+			info.flags = 0;
+			info.maxSets = maxSets * sizes.size();
+			info.poolSizeCount  = (uint32_t)sizes.size();
+			info.pPoolSizes		= sizes.data();
+			
+			vkCreateDescriptorPool(device, &info, allocator, pDescriptorPool);
+			
+			return SUCCESS;
+		}
 
-			*pDescriptorPool = descriptorPool;
+		BReturn VulkanAPI::DestroyDescriptorPool(VkDescriptorPool* pDescriptorPool)
+		{
+			if (pDescriptorPool == nullptr || *pDescriptorPool == VK_NULL_HANDLE)
+				return ATTEMPT_DELETE_NULLPTR;
+
+			vkDestroyDescriptorPool(device, *pDescriptorPool, allocator);
 
 			return SUCCESS;
 		}
+
+		BReturn VulkanAPI::CreateDescriptorSetLayout(std::vector<VkDescriptorSetLayoutBinding>& bindings, VkDescriptorSetLayout* pDescriptorSetLayout)
+		{
+			{
+				VkDescriptorSetLayoutCreateInfo info
+				{
+					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+					.pNext = nullptr,
+					.flags = 0,
+					.bindingCount = (uint32_t)bindings.size(),
+					.pBindings =bindings.data()
+				};
+
+
+				vkCreateDescriptorSetLayout(device, &info, allocator, pDescriptorSetLayout);
+			}
+			return SUCCESS;
+		}
+
+		BReturn VulkanAPI::AllocateDescriptorSet(uint32_t count, VkDescriptorSetLayout layout, VkDescriptorPool& pool, VkDescriptorSet* pDescriptorSet)
+		{
+			VkDescriptorSetAllocateInfo info{ };
+			info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+			info.pNext = nullptr;
+			info.descriptorPool = pool;
+			info.pSetLayouts = &layout;
+			info.descriptorSetCount = count;
+
+			vkAllocateDescriptorSets(device, &info, pDescriptorSet);
+
+			return SUCCESS;
+		}
+
 
 		BReturn VulkanAPI::GetPipelineCache(VkPipelineCache* pPipelineCache)
 		{
@@ -414,15 +439,57 @@ namespace Boundless {
 			return SUCCESS;
 		}
 
-		BReturn VulkanAPI::CreatePipelineLayout(VkPipelineLayout* pPipelineLayout)
+		BReturn VulkanAPI::CreatePipelineLayout(std::vector<VkDescriptorSetLayout>& setLayouts, std::vector<VkPushConstantRange>& pushConstants, VkPipelineLayout* pPipelineLayout)
 		{
 			VkPipelineLayoutCreateInfo info{};
 			info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 			info.pNext = nullptr;
 			info.flags = 0;
 
+			if (!setLayouts.empty())
+			{
+				info.setLayoutCount = (uint32_t)setLayouts.size();
+				info.pSetLayouts = setLayouts.data();
+			}
+
+			if (!pushConstants.empty()) {
+				info.pushConstantRangeCount = (uint32_t)pushConstants.size();
+				info.pPushConstantRanges = pushConstants.data();
+			}
+
 			+vkCreatePipelineLayout(device, &info, allocator, pPipelineLayout);
 
+			return SUCCESS;
+		}
+
+		BReturn VulkanAPI::DestroyPipeline(VkPipeline* pPipeline)
+		{
+			if (pPipeline == nullptr || *pPipeline == VK_NULL_HANDLE)
+				return ATTEMPT_DELETE_NULLPTR;
+
+			vkDestroyPipeline(device, *pPipeline, allocator);
+
+			return SUCCESS;
+		}
+
+		BReturn VulkanAPI::UpdateUniforms(uint32_t bufferSize, VkBuffer& uniformBuffer, uint32_t binding, VkDescriptorSet& descriptorSet)
+		{
+			VkDescriptorBufferInfo bufferInfo = {};
+			bufferInfo.buffer = uniformBuffer;
+			bufferInfo.offset = 0;
+			bufferInfo.range = bufferSize; // Size of your UBO data
+
+			VkWriteDescriptorSet descriptorWrite = {};
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.dstSet = descriptorSet; // Your descriptor set
+			descriptorWrite.dstBinding = binding; // Binding point of your UBO in the descriptor set
+			descriptorWrite.dstArrayElement = 0;
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			descriptorWrite.descriptorCount = 1;
+			descriptorWrite.pBufferInfo = &bufferInfo;
+
+			vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+			
 			return SUCCESS;
 		}
 
@@ -463,6 +530,7 @@ namespace Boundless {
 			info.subpass = subpass;
 			info.basePipelineHandle = basePipelineHandle;
 			info.basePipelineIndex = basePipelineIndex;
+			info.pDynamicState = pDynamicState;
 
 			+vkCreateGraphicsPipelines(device, nullptr, 1, &info, allocator, pPipeline);
 
@@ -501,10 +569,10 @@ namespace Boundless {
 			std::string source = buffer.data();
 
 			modules.resize(stagesCount);
+			shaderc::Compiler compiler;
 
 			for (int i = 0; i < stagesCount; i++)
 			{
-				shaderc::Compiler compiler;
 				shaderc::CompileOptions options;
 				
 				shaderc_shader_kind stage = DetermineShaderStage(pStages[i]);
@@ -517,12 +585,16 @@ namespace Boundless {
 				}
 
 				shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(source, stage, filepath.c_str(), options);
-
 				if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
-					//Debug::Log("Failed To Compile Shader to SPIR-V: %s", filepath.c_str());
-					std::cout << result.GetErrorMessage() << std::endl;
+					std::cout << "Failed To Compile Shader to SPIR-V: " << filepath << "\n";
+					std::cout << "Compilation Status: " << result.GetCompilationStatus() << std::endl;
+					std::cout << "Error Message: " << result.GetErrorMessage() << std::endl;
 					return FAILURE;
 				}
+				else {
+					std::cout << "Shader compiled successfully: " << filepath << std::endl;
+				}
+
 
 				std::vector<uint32_t> spirv{ result.begin(), result.end() };
 
@@ -537,6 +609,20 @@ namespace Boundless {
 			}
 
 			// create shader module
+			return SUCCESS;
+		}
+
+		BReturn VulkanAPI::DestroyShaderPackage(std::vector<VkShaderModule>& modules)
+		{
+			if (modules.empty())
+				return FAILURE;
+
+			for (size_t i = 0; i < modules.size(); i++)
+			{
+				vkDestroyShaderModule(device, modules[i], allocator);
+			}
+
+
 			return SUCCESS;
 		}
 
@@ -558,7 +644,12 @@ namespace Boundless {
 			return CreateTexture2D(nullptr, width, height, samples, bits, channels, image);
 		}
 
-		BReturn VulkanAPI::FreeBuffer(Buffer& buffer)
+		BReturn VulkanAPI::CreateDepthTexture(uint32_t width, uint32_t height, Texture2D& texture)
+		{
+			return CreateTexture2D(nullptr, width, height, Texture2D::MSAA::None, Texture2D::BitsPerPixel::BITS_32, Texture2D::ColorChannels::D, texture);
+		}
+
+		BReturn VulkanAPI::FreeBuffer(VulkanBuffer& buffer)
 		{
 			vkDestroyBuffer(device, buffer.buffer, allocator);
 			vkFreeMemory(device, buffer.memory, allocator);
@@ -566,7 +657,7 @@ namespace Boundless {
 			return SUCCESS;
 		}
 
-		BReturn VulkanAPI::CopyToBuffer(void* data, VkDeviceSize bufferSize, Buffer& buffer) {
+		BReturn VulkanAPI::CopyToBuffer(void* data, VkDeviceSize bufferSize, VulkanBuffer& buffer) {
 
 			void* mappedData;
 			vkMapMemory(device, buffer.memory, 0, bufferSize, 0, &mappedData);
@@ -576,7 +667,7 @@ namespace Boundless {
 			return SUCCESS;
 		}
 
-		BReturn VulkanAPI::CopyBufferToImage(Buffer& buffer, Texture2D& image)
+		BReturn VulkanAPI::CopyBufferToImage(VulkanBuffer& buffer, Texture2D& image)
 		{
 
 			// Transition image layout and copy staging buffer to the image
@@ -585,35 +676,45 @@ namespace Boundless {
 				return FAILURE;
 			}
 
-			VkImageMemoryBarrier barrier{};
-			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.image = image.image;
-			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			barrier.subresourceRange.baseMipLevel = 0;
-			barrier.subresourceRange.levelCount = 1;
-			barrier.subresourceRange.baseArrayLayer = 0;
-			barrier.subresourceRange.layerCount = 1;
-			barrier.srcAccessMask = 0;
-			barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			{
+				VkImageMemoryBarrier barrier{};
+				barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+				barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+				barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+				barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+				barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+				barrier.image = image.image;
 
-			vkCmdPipelineBarrier(
-				cmd,
-				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-				0,
-				0, nullptr,
-				0, nullptr,
-				1, &barrier
-			);
+				if(image.format == VK_FORMAT_D32_SFLOAT)
+					barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+				else
+					barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			
+				barrier.subresourceRange.baseMipLevel = 0;
+				barrier.subresourceRange.levelCount = 1;
+				barrier.subresourceRange.baseArrayLayer = 0;
+				barrier.subresourceRange.layerCount = 1;
+				barrier.srcAccessMask = 0;
+				barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+				vkCmdPipelineBarrier(
+					cmd,
+					VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+					0,
+					0, nullptr,
+					0, nullptr,
+					1, &barrier
+				);
+			}
 
 			VkBufferImageCopy region{};
 			region.bufferOffset = 0;
 			region.bufferRowLength = 0;
 			region.bufferImageHeight = 0;
-			region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			if (image.format == VK_FORMAT_D32_SFLOAT)
+				region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+			else
+				region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			region.imageSubresource.mipLevel = 0;
 			region.imageSubresource.baseArrayLayer = 0;
 			region.imageSubresource.layerCount = 1;
@@ -629,19 +730,37 @@ namespace Boundless {
 				&region
 			);
 
-			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			{
+				VkImageMemoryBarrier barrier{};
+				barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+				barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+				barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+				barrier.image = image.image;
 
-			vkCmdPipelineBarrier(
-				cmd,
-				VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-				0,
-				0, nullptr,
-				0, nullptr,
-				1, &barrier
-			);
+				if (image.format == VK_FORMAT_D32_SFLOAT)
+					barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+				else
+					barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+
+				barrier.subresourceRange.baseMipLevel = 0;
+				barrier.subresourceRange.levelCount = 1;
+				barrier.subresourceRange.baseArrayLayer = 0;
+				barrier.subresourceRange.layerCount = 1;
+
+				barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+				barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+				barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+				vkCmdPipelineBarrier(
+					cmd,
+					VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+					0,
+					0, nullptr,
+					0, nullptr,
+					1, &barrier
+				);
+			}
 
 			if (EndSingleTimeCommand(commandPool, graphicsQueue, cmd) != SUCCESS) {
 				return FAILURE;
@@ -674,7 +793,15 @@ namespace Boundless {
 				info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 				info.mipLevels = 1;
 				info.tiling = VK_IMAGE_TILING_OPTIMAL;
-				info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+				
+				if (channels == Texture2D::ColorChannels::D)
+				{
+					info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+				}
+				else {
+					info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+				}
+
 				info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 				info.samples = VK_SAMPLE_COUNT_1_BIT;
 
@@ -699,11 +826,10 @@ namespace Boundless {
 			// buffer default data or texture data
 			{
 				// If data exists, the use wants to upload texture data.
-				// take care of this.
 				if (data) {
 
 					// Create a staging buffer
-					Buffer staging{};
+					VulkanBuffer staging{};
 					int size = width * height * to_bytes_per_pixel((int)bits, (int)channels);
 
 					AllocateBuffer<BufferType::Staging>(size, staging);
@@ -717,28 +843,59 @@ namespace Boundless {
 					FreeBuffer(staging);
 				}
 				else {
-					// no data is passed in.. we need some dummy data
 					size_t count = width * height;
-					uint32_t* dummy_data = new uint32_t[count]{ 0x000000FF };
-					for (int i = 0; i < width * height; i++) dummy_data[i] = 0xFF000000;
 					
-					// Create Staging Buffer
-					Buffer staging{};
-					int size = width * height * to_bytes_per_pixel((int)bits, (int)channels);
-					
-					AllocateBuffer<BufferType::Staging>(size, staging);
-					
-					// Copy data to Staging Buffer
-					CopyToBuffer(dummy_data, size, staging);
+					if (channels == Texture2D::ColorChannels::D) {
+						// no data is passed in.. we need some dummy data
 
-					// Copy Staging Buffer to Image.
-					CopyBufferToImage(staging, image);
+						uint32_t* dummy_data = new uint32_t[count]{ 0xFF };
 
-					// Clean up staging buffer
-					FreeBuffer(staging);
+						for (int i = 0; i < width * height; i++) dummy_data[i] = 0xFF;
 
-					// delte unnecissary data, its on the GPU now.
-					delete[] dummy_data;
+						// Create Staging Buffer
+						VulkanBuffer staging{};
+						int size = width * height * to_bytes_per_pixel((int)bits, 1);
+
+						AllocateBuffer<BufferType::Staging>(size, staging);
+
+						// Copy data to Staging Buffer
+						CopyToBuffer(dummy_data, size, staging);
+
+						// Copy Staging Buffer to Image.
+						CopyBufferToImage(staging, image);
+
+						// Clean up staging buffer
+						FreeBuffer(staging);
+
+						// delte unnecissary data, its on the GPU now.
+						delete[] dummy_data;
+					}
+					else {
+						// no data is passed in.. we need some dummy data
+
+						uint32_t* dummy_data = new uint32_t[count]{ 0x000000FF };
+
+						for (int i = 0; i < width * height; i++) dummy_data[i] = 0xFF000000;
+
+						// Create Staging Buffer
+						VulkanBuffer staging{};
+						int size = width * height * to_bytes_per_pixel((int)bits, (int)channels);
+
+						AllocateBuffer<BufferType::Staging>(size, staging);
+
+						// Copy data to Staging Buffer
+						CopyToBuffer(dummy_data, size, staging);
+
+						// Copy Staging Buffer to Image.
+						CopyBufferToImage(staging, image);
+
+						// Clean up staging buffer
+						FreeBuffer(staging);
+
+						// delte unnecissary data, its on the GPU now.
+						delete[] dummy_data;
+					}
+
 				}
 			}
 
@@ -749,7 +906,15 @@ namespace Boundless {
 				info.image = image.image;
 				info.viewType = VK_IMAGE_VIEW_TYPE_2D;
 				info.format = image.format;
+				if (channels == Texture2D::ColorChannels::D) {
+
+					info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+				}
+				else {
+
 				info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				}
+
 				info.subresourceRange.baseMipLevel = 0;
 				info.subresourceRange.levelCount = 1;
 				info.subresourceRange.baseArrayLayer = 0;
@@ -797,34 +962,122 @@ namespace Boundless {
 			return SUCCESS;
 		}
 
-		BReturn VulkanAPI::CreateRenderPass(Texture2D& renderTexture, VkRenderPass* pRenderPass)
-		{
-			VkAttachmentDescription colorAttachment{};
-			colorAttachment.format = renderTexture.format;
-			colorAttachment.samples = renderTexture.samples;
-			colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-			colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-			colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-			colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-			colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-			VkAttachmentReference colorAttachmentRef{};
-			colorAttachmentRef.attachment = 0;
-			colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		BReturn VulkanAPI::CreateRenderPass(std::vector<Texture2D>& colorAttachments, VkRenderPass* pRenderPass) {
+
+			std::vector<VkAttachmentDescription> attachmentDescriptions;
+
+			std::vector<VkAttachmentReference> colorRefs;
+
+			/// deal with color attachments.. 
+			for (size_t i = 0; i < colorAttachments.size(); i++)
+			{
+				VkAttachmentDescription desc{};
+				{
+					desc.format = colorAttachments[i].format;
+					desc.samples = colorAttachments[i].samples;
+					desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+					desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+					desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+					desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+					desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+					desc.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+				}
+
+				VkAttachmentReference ref{};
+				ref.attachment = i;
+				ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+				attachmentDescriptions.push_back(desc);
+				colorRefs.push_back(ref);
+			}
+
 
 			VkSubpassDescription subpass{};
 			subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-			subpass.colorAttachmentCount = 1;
-			subpass.pColorAttachments = &colorAttachmentRef;
+			subpass.colorAttachmentCount = (uint32_t)colorRefs.size();
+			subpass.pColorAttachments = colorRefs.data();
+
 
 			VkRenderPassCreateInfo renderPassInfo{};
 			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-			renderPassInfo.attachmentCount = 1;
-			renderPassInfo.pAttachments = &colorAttachment;
+			renderPassInfo.attachmentCount = (uint32_t)attachmentDescriptions.size();
+			renderPassInfo.pAttachments = attachmentDescriptions.data();
 			renderPassInfo.subpassCount = 1;
 			renderPassInfo.pSubpasses = &subpass;
 
+			vkCreateRenderPass(device, &renderPassInfo, allocator, pRenderPass);
+
+			return SUCCESS;
+
+			return SUCCESS;
+		}
+		BReturn VulkanAPI::CreateRenderPass(std::vector<Texture2D>& colorAttachments,  Texture2D& depthAttachment, VkRenderPass* pRenderPass)
+		{
+			std::vector<VkAttachmentDescription> renderPassAttachments;
+			std::vector<VkAttachmentReference> colorRefs;
+
+			// color pass(s) descriptions
+			{
+				for (size_t i = 0; i < colorAttachments.size(); i++)
+				{
+					VkAttachmentDescription desc{};
+					{
+						desc.format = colorAttachments[i].format;
+						desc.samples = colorAttachments[i].samples;
+						desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+						desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+						desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+						desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+						desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+						desc.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+					}
+
+					VkAttachmentReference ref{};
+					ref.attachment = i;
+					ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+					renderPassAttachments.push_back(desc);
+					colorRefs.push_back(ref);
+				}
+			}
+
+			VkSubpassDescription subpass{};
+			subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+			subpass.colorAttachmentCount = (uint32_t)colorRefs.size();
+			subpass.pColorAttachments = colorRefs.data();
+
+			// depth pass description
+			{
+				VkAttachmentDescription depthAttachmentDesc{
+					.flags = 0,
+					.format = depthAttachment.format,
+					.samples = depthAttachment.samples,
+					.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+					.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+					.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+					.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+					.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+					.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				};
+
+				renderPassAttachments.push_back(depthAttachmentDesc);
+
+				VkAttachmentReference depthReferences{};
+				depthReferences.attachment = renderPassAttachments.size() - 1;
+				depthReferences.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+				
+				subpass.pDepthStencilAttachment = &depthReferences;
+			}
+
+			VkRenderPassCreateInfo renderPassInfo{};
+			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+			renderPassInfo.attachmentCount = (uint32_t) renderPassAttachments.size();
+			renderPassInfo.pAttachments = renderPassAttachments.data();
+			renderPassInfo.subpassCount = 1;
+			renderPassInfo.pSubpasses = &subpass;
 
 			vkCreateRenderPass(device, &renderPassInfo, allocator, pRenderPass);
 
@@ -841,16 +1094,20 @@ namespace Boundless {
 			return SUCCESS;
 		}
 
-		BReturn VulkanAPI::CreateFramebuffer(uint32_t width, uint32_t height, Texture2D& renderTexture, VkRenderPass renderPass, VkFramebuffer* pFramebuffer)
+		BReturn VulkanAPI::CreateFramebuffer(uint32_t width, uint32_t height, std::vector<Texture2D>& attachments, VkRenderPass renderPass, VkFramebuffer* pFramebuffer)
 		{
-			VkImageView attachments[1]{ renderTexture.view };
+			std::vector<VkImageView> framebufferAttachments;
+			framebufferAttachments.resize(attachments.size());
 
+			std::transform(attachments.begin(), attachments.end(), framebufferAttachments.data(), [](const Texture2D& t) {return t.view; });
+
+			
 			VkFramebufferCreateInfo info{};
 			info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 			info.pNext = nullptr;
 			info.flags = 0;
-			info.attachmentCount = _countof(attachments);
-			info.pAttachments = attachments;
+			info.attachmentCount = (uint32_t)framebufferAttachments.size();
+			info.pAttachments = framebufferAttachments.data();
 			info.width = width;
 			info.height = height;
 			info.layers = 1;
@@ -870,6 +1127,8 @@ namespace Boundless {
 
 			return SUCCESS;
 		}
+
+	
 
 
 	}

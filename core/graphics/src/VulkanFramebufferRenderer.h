@@ -20,14 +20,15 @@ namespace Boundless {
 				~VulkanFramebufferRenderer();
 
 				// Inherited via IRenderer
-				virtual void OnEvent(I::IEvent* event) override;
+				//virtual void OnEvent(I::IEvent* event) override;
 
 				virtual void Initillize() override;
 				virtual void Shutdown() override;
 
-				virtual void Update(float ts) override;
+				virtual void* RenderPass() override ;
 
-				virtual void Render() override;
+				virtual void* Begin() override;
+				virtual void End() override;
 
 				virtual int Width() override;
 				virtual int Height() override;

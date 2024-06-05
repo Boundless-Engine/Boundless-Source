@@ -15,16 +15,16 @@ namespace Boundless {
 
 	namespace I {
 
-		class ILayer  {
+		class ILayer : public I::IEventListener  {
 		public:
-			ILayer()			{ 	 }
-			virtual ~ILayer()	{	 };
+			ILayer() { EventDispatcher::AddListener(this); }
+			virtual ~ILayer() { EventDispatcher::RemoveListener(this); };
 
 			virtual BReturn OnAttach() = 0;
 			virtual BReturn OnDetach() = 0;
 
 			//! optional Update loop function.
-			virtual void OnUpdate(){}
+			virtual void OnUpdate(float ts){}
 
 			//! otional Render Loop Function
 			virtual void OnRender(){}

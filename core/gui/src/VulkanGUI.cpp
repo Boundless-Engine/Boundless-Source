@@ -13,6 +13,10 @@ namespace Boundless {
 		static uint32_t s_CurrentFrameIndex = 0;
 		static bool g_swapchainRebuild = false;
 
+		namespace {
+			VkDescriptorPool descriptorPool;
+		}
+
 		VulkanGUI::VulkanGUI(VulkanAPI* vk)
 			: vk{vk}
 		{
@@ -26,7 +30,28 @@ namespace Boundless {
 			uint32_t queueFamily = (uint32_t)-1;					vk->GetQueueFamily(&queueFamily);
 			VkQueue queue = VK_NULL_HANDLE;							vk->GetQueue(&queue);
 			VkPipelineCache pipelineCache = VK_NULL_HANDLE;			vk->GetPipelineCache(&pipelineCache);
-			VkDescriptorPool descriptorPool = VK_NULL_HANDLE;		vk->GetDescriptorPool(&descriptorPool);
+			
+			// Create Descriptor Pool
+			{
+				std::vector<VkDescriptorPoolSize> pool_sizes =
+				{
+					{ VK_DESCRIPTOR_TYPE_SAMPLER,				 1000 },
+					{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+					{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,			 1000 },
+					{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,          1000 },
+					{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,   1000 },
+					{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,   1000 },
+					{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,		 1000 },
+					{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,		 1000 },
+					{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+					{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+					{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,		 1000 }
+				};
+
+				vk->CreateDescriptorPool(1000, pool_sizes, &descriptorPool);
+
+			}
+
 			VkSurfaceKHR surface = VK_NULL_HANDLE;					vk->GetSurface(&surface);
 			int width = vk->Width();
 			int height = vk->Height();
@@ -115,6 +140,9 @@ namespace Boundless {
 
 		VulkanGUI::~VulkanGUI()
 		{
+
+			vk->DestroyDescriptorPool(&descriptorPool);
+
 			// get required objects from vulkan
 			VkInstance instance = VK_NULL_HANDLE;	vk->GetInstance(&instance);
 			VkAllocationCallbacks* allocator = nullptr;	vk->GetAllocator(allocator);

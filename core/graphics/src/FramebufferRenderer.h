@@ -35,17 +35,20 @@ namespace Boundless {
 
 			}
 
-			static BReturn ResizeFramebuffer(int width, int height, I::IFramebufferRenderer** ppFramebufferRenderer)
+			static BReturn ResizeFramebuffer(int width, int height, I::IFramebufferRenderer** ppFramebufferRenderer, bool* isResize)
 			{
 				auto& pFramebuffer = *ppFramebufferRenderer;
 
 				int w, h;
+
 				w = pFramebuffer->Width();
 				h = pFramebuffer->Height();
 
 				if (w != width || h != height) {
+					*isResize = true;
 					pFramebuffer->OnResize(width, height);
 				}
+				
 
 				return SUCCESS;
 			}

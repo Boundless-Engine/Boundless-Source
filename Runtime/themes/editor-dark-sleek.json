@@ -21,7 +21,7 @@
             "z": 0.16205531358718872
         },
         "BorderSize": 1.0,
-        "Rounding": 5.0
+        "Rounding": 7.0
     },
     "Dock": {
         "EmptyBG": {
@@ -36,7 +36,7 @@
             "y": 0.25999999046325684,
             "z": 0.9800000190734863
         },
-        "SeperatorSize": 5.0
+        "SeperatorSize": 3.0
     },
     "DragNDrop": {
         "Target": {
@@ -70,7 +70,7 @@
             "x": 15.0,
             "y": 7.0
         },
-        "Rounding": 5.0
+        "Rounding": 7.0
     },
     "Global": {
         "Alpha": 1.0,
@@ -99,7 +99,7 @@
             "x": 0.0,
             "y": 0.0
         },
-        "TableAngledHeadersAngle": 35.0
+        "TableAngledHeadersAngle": 0.01745329238474369
     },
     "Graph": {
         "Bars": {
@@ -239,7 +239,7 @@
             "z": 0.20392157137393951
         },
         "BorderSize": 1.0,
-        "Rounding": 5.0
+        "Rounding": 7.0
     },
     "ResizeGrip": {
         "Active": {
@@ -288,9 +288,9 @@
                 "z": 0.4099999964237213
             },
             "MinSize": 15.0,
-            "Rounding": 5.0
+            "Rounding": 2.0
         },
-        "Rounding": 5.0,
+        "Rounding": 7.0,
         "Size": 15.0
     },
     "Seperator": {
@@ -314,7 +314,7 @@
         },
         "TextAlign": {
             "x": 0.5,
-            "y": 0.5
+            "y": 0.3799999952316284
         },
         "TextBorderSize": 0.0,
         "TextPadding": {
@@ -467,7 +467,7 @@
             "x": 8.0,
             "y": 8.0
         },
-        "Rounding": 5.0,
+        "Rounding": 7.0,
         "TitleAlign": {
             "x": 0.5,
             "y": 0.5

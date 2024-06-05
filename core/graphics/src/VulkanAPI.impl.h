@@ -20,6 +20,13 @@ namespace Boundless {
 			else if (T == BufferType::Staging)
 				// staging buffers must have the abillity to be able to be copied to and from
 				flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+			else if (T == BufferType::Uniform)
+				// uniform buffers must have the abillity to be able to be copied to and from
+				flags |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+			else if (T == BufferType::Constant)
+				// constant buffers must have the abillity to be able to be copied to and from
+				flags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+
 			else 
 				throw std::runtime_error("BufferType is Unrecognized");
 
@@ -43,7 +50,7 @@ namespace Boundless {
 
 	
 		template<BufferType T>
-		BReturn VulkanAPI::AllocateBuffer(VkDeviceSize bufferSize, Buffer& buffer)
+		BReturn VulkanAPI::AllocateBuffer(VkDeviceSize bufferSize, VulkanBuffer& buffer)
 		{
 			VkBufferCreateInfo bufferInfo{};
 			bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

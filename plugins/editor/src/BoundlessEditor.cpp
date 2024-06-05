@@ -561,7 +561,7 @@ BReturn BoundlessEditor::Shutdown()
 
 BReturn BoundlessEditor::Run()
 {
-	
+
 	while (true) {
 		
 		if (!application_should_run)
@@ -569,15 +569,28 @@ BReturn BoundlessEditor::Run()
 			break;
 		}
 
-		for (auto& l : layers)
+        // Define a global variable to store the time at the end of the previous frame
+        static auto previousTime = std::chrono::high_resolution_clock::now();
+
+        // At the beginning of each frame:
+        auto currentTime = std::chrono::high_resolution_clock::now();
+
+        // Calculate deltaTime (time elapsed since the last frame)
+        std::chrono::duration<float> duration = currentTime - previousTime;
+        float deltaTime = duration.count();
+
+        // Update previousTime for the next frame
+        previousTime = currentTime;
+        for (auto& l : layers)
 		{
-			l->OnUpdate();
+			l->OnUpdate(deltaTime);
 		}
 
         for (auto& l : layers)
         {
             l->OnRender();
         }
+
 
 		{
 			gui->Begin();
