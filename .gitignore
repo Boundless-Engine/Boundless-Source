@@ -43,6 +43,5 @@
 *.vcxproj
 *.vcxproj.*
 
-/devops/*
 /deploy/*
 .dev/notebooks/
