@@ -27,6 +27,8 @@ using namespace Input;
 
 #include <bitset>
 
+//#include "Logger.h"
+
 enum class PipelineType {
     Wireframe,
     Unlit,
@@ -73,7 +75,7 @@ public:
         return SUCCESS;
     }
 
-        glm::mat4 testMatrix = glm::mat4(1.0f);
+    glm::mat4 testMatrix = glm::mat4(1.0f);
     Model sphere_skybox;
 
     virtual BReturn OnDetach() override {
@@ -221,7 +223,7 @@ public:
             auto model = pair.first;
             auto model_constants = pair.second;
 
-            VkDeviceSize offset = 0;
+            VkDeviceSize offsets[] = { 0, 0 };
 
             for (auto& mesh : model->meshes)
             {
@@ -234,7 +236,9 @@ public:
                 bool draw_indexed = mesh->index_count > 0;
 
                 if (mesh->vertex_count > 0) {
-                    vkCmdBindVertexBuffers(cmd, 0, 1, &mesh->vbuffer.buffer, &offset);
+                    VkBuffer vbuffers[] = { mesh->vbuffer.buffer, mesh->idbuffer.buffer };
+
+                    vkCmdBindVertexBuffers(cmd, 0, _countof(vbuffers), vbuffers, offsets);
                 }
                 if (mesh->index_count > 0) {
                     vkCmdBindIndexBuffer(cmd, mesh->ibuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
@@ -291,7 +295,7 @@ public:
             if (mesh->index_count > 0) {
                 vkCmdBindIndexBuffer(cmd, mesh->ibuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
             }
-
+            
             if (draw_indexed)
                 vkCmdDrawIndexed(cmd, mesh->index_count, 1, 0, 0, 0);
             else
@@ -325,7 +329,7 @@ public:
             auto model = pair.first;
             auto model_constants = pair.second;
 
-            VkDeviceSize offsets[] = { 0, 0 };
+            VkDeviceSize offsets[] = { 0, 0, 0};
 
             for (auto& mesh : model->meshes)
             {
@@ -344,7 +348,7 @@ public:
 
                 if (mesh->vertex_count > 0) {
                     
-                    VkBuffer vbuffers [] = {mesh->vbuffer.buffer, mesh->nbuffer.buffer };
+                    VkBuffer vbuffers [] = {mesh->vbuffer.buffer, mesh->nbuffer.buffer, mesh->idbuffer.buffer };
 
                     vkCmdBindVertexBuffers(cmd, 0, _countof(vbuffers), vbuffers, offsets);
                 }
@@ -381,8 +385,6 @@ public:
             DrawScene(cmd, renderPipelines[PipelineType::Wireframe]);
         }
 
-
-
         renderer->End();
 
     }
@@ -391,6 +393,8 @@ public:
 
 
     virtual void OnGUI() override {
+
+        ImGui::PushStyleVar(ImGuiStyleVar_::ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
         ImGui::Begin("Scene");
 
         ImVec2 texturePosition;
@@ -430,14 +434,44 @@ public:
 
         ImGui::BeginChild("###FrambufferTexture");
 
+        //const char* viewTextures[3]{
+        //    "Color",
+        //    "Depth",
+        //    "ID",
+        //};
+
+        //static int texture_id = (int)(draw_options);
         // Retrieve the render texture ID
+        //ImTextureID sceneTexture = reinterpret_cast<ImTextureID>(renderer->GetRenderTexture(texture_id));
         ImTextureID sceneTexture = reinterpret_cast<ImTextureID>(renderer->GetRenderTexture());
 
         // Display the render texture with the correct size and position
         if (enableBoxing) {
             ImGui::SetCursorPos(texturePosition);
         }
+
         ImGui::Image(sceneTexture, size, { 0, 1 }, { 1, 0 });
+
+        if (ImGui::IsMouseClicked(0, 0)) {
+            ImVec2 mousePos = ImGui::GetMousePos();
+            ImVec2 windowPos = ImGui::GetWindowPos();
+            ImVec2 relativePos = { mousePos.x - windowPos.x, mousePos.y - windowPos.y };
+            
+            std::cout << std::format("mouse pressed x: {}, y: {}", relativePos.x, relativePos.y) << std::endl;
+
+            if (relativePos.x >= 0 && relativePos.x < textureSize.x && relativePos.y >= 0 && relativePos.y < textureSize.y) {
+                float pixelValue ;
+                VulkanTexture2D* tex;
+
+                // get the id buffer.
+                renderer->GetTexture(-1, (void**)&tex);
+                Framebuffer::GetPixelInfo(api, (uint32_t)relativePos.x, (uint32_t)relativePos.y, sizeof(float), *tex, &pixelValue);
+            
+                std::cout << std::format("Pixel Picked:\tposition: <{},{}>\t value: {}", relativePos.x, relativePos.y, pixelValue) << std::endl;
+            
+            }
+
+        }
 
         ImGui::EndChild();
 
@@ -463,6 +497,7 @@ public:
             "Unlit",
             "Unlit-Wireframe",
         };
+
         bool skyboxActive = (draw_options & Draw_Skybox) != 0;
 
         ImGui::BeginChild("###MENU_DRAW_OPTIONS", {250, 50});
@@ -476,6 +511,23 @@ public:
                     draw_options |= Draw_Skybox;
 
                     
+            }
+
+        }
+        ImGui::EndChild();
+
+
+        ImGui::BeginChild("###MENU_DRAW_OPTIONS", { 250, 50 });
+        {
+           
+
+            if (ImGui::Combo(" ", &idx, options, 6)) {
+                draw_options = idx;
+
+                if (skyboxActive)
+                    draw_options |= Draw_Skybox;
+
+
             }
 
         }
@@ -499,6 +551,9 @@ public:
 
         ImGui::EndChild();
         ImGui::End();
+
+        ImGui::PopStyleVar();
+
     }
 
 

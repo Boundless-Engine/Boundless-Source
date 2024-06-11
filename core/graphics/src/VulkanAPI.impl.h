@@ -8,7 +8,7 @@ namespace Boundless {
 		template<BufferType T>
 		VkFlags DetermineBufferUsage() {
 			VkFlags flags = 0;
-
+				
 			if (T == BufferType::Vertex)
 				// vertex buffers must contain: VK_BUFFER_USAGE_VERTEX_BUFFER_BIT 
 				// vertex buffers also must have the abillity to be copied to.
@@ -26,7 +26,10 @@ namespace Boundless {
 			else if (T == BufferType::Constant)
 				// constant buffers must have the abillity to be able to be copied to and from
 				flags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-
+			else if (T == BufferType::TransferSrc)
+				flags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+			else if (T == BufferType::TransferDst)
+				flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 			else 
 				throw std::runtime_error("BufferType is Unrecognized");
 
@@ -82,6 +85,7 @@ namespace Boundless {
 				return FAILURE;
 			}
 
+			buffer.size = bufferSize;
 
 			return SUCCESS;
 		}

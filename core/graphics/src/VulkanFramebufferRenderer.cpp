@@ -23,9 +23,12 @@ namespace Boundless {
 				uint32_t height;
 				VkRenderPass renderPass;
 				VkFramebuffer framebuffer;
-				Texture2D renderTexture;
-				Texture2D depthTexture;
+				VulkanTexture2D renderTexture;
+				VulkanTexture2D depthTexture;
+				VulkanTexture2D idTexture;
 				VulkanAPI* vk;
+				
+				std::vector<VulkanTexture2D> colorAttachments;
 
 				
 				// geometry info
@@ -84,37 +87,20 @@ namespace Boundless {
 				width = 1;
 				height = 1;
 				
+				
 				// create the offscreen image, image view and memory
-				vk->CreateRenderTexture(width, height, Texture2D::MSAA::None, Texture2D::BitsPerPixel::BITS_8, Texture2D::ColorChannels::RGBA, renderTexture);
+				vk->CreateRenderTexture(width, height, VulkanTexture2D::MSAA::None, VulkanTexture2D::BitsPerPixel::BITS_8, VulkanTexture2D::ColorChannels::RGBA, renderTexture);
 				vk->CreateDepthTexture(width, height, depthTexture);
-
-				std::vector<Texture2D> colorAttachments = {
+				vk->CreateRenderTexture(width, height, VulkanTexture2D::MSAA::None, VulkanTexture2D::BitsPerPixel::BITS_32, VulkanTexture2D::ColorChannels::R, idTexture);
+				
+				colorAttachments = {
 					renderTexture,
+					idTexture,
 				};
 
 				vk->CreateRenderPass(colorAttachments, depthTexture, &renderPass);
+				vk->CreateFramebuffer(width, height, colorAttachments, depthTexture, renderPass, &framebuffer);
 
-				std::vector<Texture2D> framebufferAttachments
-				{
-					renderTexture,
-					depthTexture
-				};
-
-
-				vk->CreateFramebuffer(width, height, framebufferAttachments, renderPass, &framebuffer);
-
-				//----------------------------------------------------
-				// Create Render Pipeline 
-				//----------------------------------------------------
-
-				
-				// create vertex buffer.
-
-				/*VkDeviceSize axisBufferSize = sizeof(Vertex::Axis) * axis_vertices.size();
-				vk->AllocateBuffer<BufferType::Vertex>(axisBufferSize, axisBuffer);
-				vk->CopyToBuffer((void*)axis_vertices.data(), axisBufferSize, axisBuffer);*/
-
-			
 
 			}
 
@@ -122,12 +108,9 @@ namespace Boundless {
 			{
 				fn_profiler("FramebufferRenderer_Shutdown");
 
-				//ImGui_ImplVulkan_RemoveTexture(texture);
 				VkQueue graphicsQueue;
 				vk->GetQueue(&graphicsQueue);
 				vkQueueWaitIdle(graphicsQueue);
-
-
 
 				vk->DestroyRenderPass(&renderPass);
 				vk->DestroyFramebuffer(&framebuffer);
@@ -161,11 +144,19 @@ namespace Boundless {
 
 				std::vector<VkClearValue> clearValues =
 				{
+					// color clear value
 					{
 						.color = {
 							.float32 = {0.16f, 0.16f, 0.16f, 1.0f}
 						}
 					},
+					// id clear value
+					{
+						.color = {
+							.float32 = { 0.0f, }
+						}
+					},
+					// depth clear value
 					{
 						.depthStencil = {.depth = 1.0f }
 					}
@@ -220,23 +211,17 @@ namespace Boundless {
 
 
 				// create the offscreen image, image view and memory
-				vk->CreateRenderTexture(width, height, Texture2D::MSAA::None, Texture2D::BitsPerPixel::BITS_8, Texture2D::ColorChannels::RGBA, renderTexture);
+				vk->CreateRenderTexture(width, height, VulkanTexture2D::MSAA::None, VulkanTexture2D::BitsPerPixel::BITS_8, VulkanTexture2D::ColorChannels::RGBA, renderTexture);
 				vk->CreateDepthTexture(width, height, depthTexture);
+				vk->CreateRenderTexture(width, height, VulkanTexture2D::MSAA::None, VulkanTexture2D::BitsPerPixel::BITS_32, VulkanTexture2D::ColorChannels::R, idTexture);
 
-				std::vector<Texture2D> colorAttachments = {
+				colorAttachments = {
 					renderTexture,
+					idTexture,
 				};
 
 				vk->CreateRenderPass(colorAttachments, depthTexture, &renderPass);
-
-				std::vector<Texture2D> framebufferAttachments
-				{
-					renderTexture,
-					depthTexture
-				};
-
-
-				vk->CreateFramebuffer(width, height, framebufferAttachments, renderPass, &framebuffer);
+				vk->CreateFramebuffer(width, height, colorAttachments, depthTexture, renderPass, &framebuffer);
 
 				VkCommandPool pool;
 				vk->GetCommandPool(&pool);
@@ -251,6 +236,19 @@ namespace Boundless {
 			void* VulkanFramebufferRenderer::GetRenderTexture()
 			{
 				return (void*)renderTexture.descriptorSet;
+			}
+			BReturn VulkanFramebufferRenderer::GetTexture(int idx, void** texture)
+			{
+				if (idx == 0)
+					*texture = &renderTexture;
+				else if (idx == 2)
+					*texture = &depthTexture;
+				else if (idx == -1)
+					*texture = &idTexture;
+				else
+					return ARGUMENT_ERROR;
+
+				return SUCCESS;
 			}
 		}
 

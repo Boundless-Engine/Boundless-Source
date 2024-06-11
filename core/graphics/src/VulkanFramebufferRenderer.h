@@ -36,6 +36,8 @@ namespace Boundless {
 				virtual void OnResize(int nwidth, int nheight) override;
 
 				void* GetRenderTexture() override;
+
+				BReturn GetTexture(int idx, void** texture);
 			};
 		}
 	}

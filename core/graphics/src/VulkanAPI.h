@@ -24,13 +24,12 @@ namespace Boundless {
 		
 		void operator +(const VkResult res);
 
-		struct Texture2D {
+		struct VulkanTexture2D {
 			enum class BitsPerPixel {
-				BITS_8 = 0x08,
+				BITS_8	= 0x08,
 				BITS_16 = 0x10,
 				BITS_32 = 0x20
 			};
-
 			enum class ColorChannels {
 				R = 1,
 				RG = 2,
@@ -39,8 +38,6 @@ namespace Boundless {
 				
 				D,
 			};
-
-
 			enum class MSAA {
 				None,
 				x2,
@@ -57,10 +54,10 @@ namespace Boundless {
 			
 			VkSampler sampler;
 			VkDescriptorSet descriptorSet;
+			VkImageLayout layout;
 			
 			VkSampleCountFlagBits samples;
 			VkFormat format;
-
 			uint32_t width;
 			uint32_t height;
 
@@ -92,7 +89,7 @@ namespace Boundless {
 					case ColorChannels::RG: return VK_FORMAT_R32G32_SFLOAT;
 					case ColorChannels::RGB: return VK_FORMAT_R32G32B32_SFLOAT;
 					case ColorChannels::RGBA: return VK_FORMAT_R32G32B32A32_SFLOAT;
-					case ColorChannels::D: return VK_FORMAT_D32_SFLOAT;  // This is correctly identified as a depth format
+					case ColorChannels::D: return VK_FORMAT_D32_SFLOAT; 
 					default: throw std::runtime_error("Format Unrecognized!");
 					}
 				}
@@ -100,7 +97,6 @@ namespace Boundless {
 					throw std::runtime_error("Format Unrecognized!");
 				}
 			}
-
 			static VkSampleCountFlagBits ConvertSampleRate(MSAA r) {
 				
 				if (r == MSAA::None)
@@ -121,8 +117,6 @@ namespace Boundless {
 					throw std::runtime_error("unknow msaa format selected.");
 
 			}
-			
-
 			VkDeviceSize Size() {
 				return (width * height) * (((int)bits / 8) * (int)channels);
 			}
@@ -140,6 +134,8 @@ namespace Boundless {
 			Index,
 			Uniform,
 			Constant,
+			TransferSrc,
+			TransferDst,
 		};
 
 		enum class ShaderStage {
@@ -160,7 +156,7 @@ namespace Boundless {
 			static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object, size_t location, int32_t messageCode, const char* pLayerPrefix, const char* pMessage, void* pUserData)
 			{
 				(void)flags; (void)object; (void)location; /*(void)messageCode;*/ (void)pUserData; (void)pLayerPrefix; // Unused arguments
-				fprintf(stderr, "\n[vulkan-deb] ObjectType:%i\nMessage(%i):\n\t%s\n\n", objectType, messageCode, pMessage);
+				fprintf(stdout, "\n[vulkan-deb] ObjectType:%i\nMessage(%i):\n\t%s\n\n", objectType, messageCode, pMessage);
 				return VK_FALSE;
 			}
 #endif // IMGUI_VULKAN_DEBUG_REPORT
@@ -198,16 +194,17 @@ namespace Boundless {
 
 
 			// RESOURCES
-			BReturn CreateRenderTexture(uint32_t width, uint32_t height, Texture2D::MSAA samples, Texture2D::BitsPerPixel bits, Texture2D::ColorChannels channels, Texture2D& image);
-			BReturn CreateDepthTexture(uint32_t width, uint32_t height, Texture2D& texture);
+			BReturn CreateRenderTexture(uint32_t width, uint32_t height, VulkanTexture2D::MSAA samples, VulkanTexture2D::BitsPerPixel bits, VulkanTexture2D::ColorChannels channels, VulkanTexture2D& image);
+			BReturn CreateDepthTexture(uint32_t width, uint32_t height, VulkanTexture2D& texture);
 
-			BReturn CreateTexture2D(void* data, uint32_t width, uint32_t height, Texture2D::MSAA samples, Texture2D::BitsPerPixel bits, Texture2D::ColorChannels channels, Texture2D& image);
-			BReturn DestroyTexture2D(Texture2D& image);
 
-			BReturn CreateRenderPass(std::vector<Texture2D>& colorAttachments, VkRenderPass* pRenderPass);
-			BReturn CreateRenderPass(std::vector<Texture2D>& colorAttachments, Texture2D& depthAttachment, VkRenderPass* pRenderPass);
+			BReturn CreateTexture2D(void* data, uint32_t width, uint32_t height, VulkanTexture2D::MSAA samples, VulkanTexture2D::BitsPerPixel bits, VulkanTexture2D::ColorChannels channels, VulkanTexture2D& image);
+			BReturn DestroyTexture2D(VulkanTexture2D& image);
+
+			BReturn CreateRenderPass(std::vector<VulkanTexture2D>& colorAttachments, VkRenderPass* pRenderPass);
+			BReturn CreateRenderPass(std::vector<VulkanTexture2D>& colorAttachments, VulkanTexture2D& depthAttachment, VkRenderPass* pRenderPass);
 			BReturn DestroyRenderPass(VkRenderPass* pRenderPass);
-			BReturn CreateFramebuffer(uint32_t width, uint32_t height, std::vector<Texture2D>& attachments, VkRenderPass renderPass, VkFramebuffer* pFramebuffer);
+			BReturn CreateFramebuffer(uint32_t width, uint32_t height, std::vector<VulkanTexture2D>& colorAttachments, VulkanTexture2D& depthAttachment, VkRenderPass renderPass, VkFramebuffer* pFramebuffer);
 			BReturn DestroyFramebuffer(VkFramebuffer* pFramebuffer);
 			
 
@@ -222,11 +219,17 @@ namespace Boundless {
 			BReturn FreeBuffer(VulkanBuffer& buffer);
 
 			BReturn CopyToBuffer(void* data, VkDeviceSize size, VulkanBuffer& buffer);
-			BReturn CopyBufferToImage(VulkanBuffer& buffer, Texture2D& image);
-			
+			BReturn ReadFromBuffer(VulkanBuffer& buffer, VkDeviceSize bufferSize, void* outData);
+
+			BReturn CopyBufferToImage(VulkanBuffer& buffer, VulkanTexture2D& image);
+			BReturn CopyImageToBuffer(VulkanTexture2D& image, VkBufferImageCopy region, VulkanBuffer& buffer);
 			BReturn CompileShader(const std::string& filepath, std::vector<VkShaderModule>& modules, int stagesCount, const ShaderStage* pStages);
 			BReturn DestroyShaderPackage(std::vector<VkShaderModule>& modules);
 
+			// map incoming data to cpu held buffer
+			BReturn Map(VkDeviceSize size, VulkanBuffer& buffer, void* outData);
+			BReturn Unmap(VulkanBuffer& buffer);
+			
 			/*!
 			 * @brief Creates a graphics pipeline.
 			 *
@@ -277,6 +280,8 @@ namespace Boundless {
 
 
 		protected:
+			BReturn TransitionImageLayout(VkCommandBuffer cmd, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask);
+
 			uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 		private:
 			VkAllocationCallbacks*		allocator = NULL;

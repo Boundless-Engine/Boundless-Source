@@ -6,7 +6,9 @@
 
 namespace Boundless {
     namespace Graphics {
+        static int _id_ = 0;
         struct Mesh {
+
             Mesh(I::IGraphicsAPI* api, std::vector<glm::vec3> positions, std::vector<uint16_t> indices, glm::mat4 matrix = glm::mat4(1.0))
                 : api{ api }, vertex_count{ (uint32_t)positions.size() }, index_count{ (uint32_t)indices.size() }, matrix{ matrix }
             {
@@ -29,6 +31,12 @@ namespace Boundless {
                 vk->AllocateBuffer<BufferType::Vertex>(nbufferSize, nbuffer);
                 vk->CopyToBuffer((void*)normals.data(), nbufferSize, nbuffer);
 
+                std::vector<float> ids(positions.size(), _id_++);
+
+                VkDeviceSize idbufferSize = sizeof(float) * ids.size();
+                vk->AllocateBuffer<BufferType::Vertex>(idbufferSize, idbuffer);
+                vk->CopyToBuffer((void*)ids.data(), idbufferSize, idbuffer);
+
             }
 
             ~Mesh() {
@@ -47,6 +55,7 @@ namespace Boundless {
 
             VulkanBuffer vbuffer{};
             VulkanBuffer ibuffer{};
+            VulkanBuffer idbuffer{};
             VulkanBuffer nbuffer{};
 
 

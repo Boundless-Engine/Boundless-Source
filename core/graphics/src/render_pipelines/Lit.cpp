@@ -147,18 +147,23 @@ namespace Boundless {
 						}
 					};
 
-
+					uint32_t bcount = 0;
 					bindings = {
 						{//POSITION
-							.binding = 0,
+							.binding = bcount++,
 							.stride = sizeof(Vertex),
 							.inputRate = VK_VERTEX_INPUT_RATE_VERTEX
 						},
 						{// NORMAL
-							.binding = 1,
+							.binding = bcount++,
 							.stride = sizeof(glm::vec3),
 							.inputRate = VK_VERTEX_INPUT_RATE_VERTEX
-						}
+						},
+						{	// ID
+							.binding = bcount++,
+							.stride = sizeof(float),
+							.inputRate = VK_VERTEX_INPUT_RATE_VERTEX
+						},
 					};
 
 					attributes = {
@@ -172,6 +177,12 @@ namespace Boundless {
 							.location = 1,
 							.binding = 1,
 							.format = VK_FORMAT_R32G32B32_SFLOAT,
+							.offset = 0
+						},
+						{	 // ID
+							.location = 2,
+							.binding = 2,
+							.format = VK_FORMAT_R32_SFLOAT,
 							.offset = 0
 						}
 					};
@@ -239,21 +250,33 @@ namespace Boundless {
 						.flags = 0,
 						.depthTestEnable = VK_TRUE,
 						.depthWriteEnable = VK_TRUE,
-						.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
+						.depthCompareOp = VK_COMPARE_OP_LESS,
 						.depthBoundsTestEnable = VK_FALSE,
 						.stencilTestEnable = VK_FALSE,
 						.minDepthBounds = 0.1f,
 						.maxDepthBounds = 1.0f,
 					};
-					VkPipelineColorBlendAttachmentState blender{
-						.blendEnable = VK_TRUE,
-						.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
-						.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-						.colorBlendOp = VK_BLEND_OP_ADD,
-						.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
-						.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-						.alphaBlendOp = VK_BLEND_OP_ADD,
-						.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+					std::vector<VkPipelineColorBlendAttachmentState> blendStates{
+						{
+							.blendEnable = VK_TRUE,
+							.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+							.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+							.colorBlendOp = VK_BLEND_OP_ADD,
+							.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+							.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+							.alphaBlendOp = VK_BLEND_OP_ADD,
+							.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+						},
+						{
+							.blendEnable = VK_TRUE,
+							.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+							.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+							.colorBlendOp = VK_BLEND_OP_ADD,
+							.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+							.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+							.alphaBlendOp = VK_BLEND_OP_ADD,
+							.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+						},
 					};
 
 					VkPipelineColorBlendStateCreateInfo		colorBlendState{
@@ -262,8 +285,8 @@ namespace Boundless {
 						.flags = 0,
 						.logicOpEnable = VK_FALSE,
 						.logicOp = VK_LOGIC_OP_AND,
-						.attachmentCount = 1,
-						.pAttachments = &blender
+						.attachmentCount = (uint32_t)blendStates.size(),
+						.pAttachments = blendStates.data()
 					};
 
 					std::vector<VkDynamicState> states

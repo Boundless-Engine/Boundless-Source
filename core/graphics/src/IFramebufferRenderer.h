@@ -26,6 +26,8 @@ namespace Boundless {
 
 			virtual void* GetRenderTexture() = 0;
 
+			virtual BReturn GetTexture(int idx, void** pTexture) = 0;
+
 		};
 	}
 }

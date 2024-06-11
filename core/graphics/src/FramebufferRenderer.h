@@ -5,6 +5,7 @@
 
 #ifdef ENABLE_VULKAN
 #include "VulkanFramebufferRenderer.h"
+#include "FramebufferUtils.h"
 #endif
 
 namespace Boundless {

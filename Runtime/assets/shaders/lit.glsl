@@ -4,12 +4,14 @@
 
 layout(location = 0) in vec3 i_Position;
 layout(location = 1) in vec3 i_Normal;
+layout(location = 2) in float i_ID;
 
 layout(location = 0) out vec4 o_Color;
 layout(location = 1) out vec3 o_Normal;
 layout(location = 2) out vec3 o_Position;
 layout(location = 3) out vec3 o_LightColor;
 layout(location = 4) out vec3 o_LightPosition;
+layout(location = 5) out float o_ID;
 
 struct Light {
     vec3 position;
@@ -38,6 +40,7 @@ void main()
     o_LightColor = pushConstants.light.color;
     o_LightPosition = pushConstants.light.position;
     o_Position =  vec3(pushConstants.model * vec4(i_Position, 1.0));
+    o_ID = i_ID;
 }
 
 
@@ -50,8 +53,10 @@ layout(location = 1) in vec3 i_Normal;
 layout(location = 2) in vec3 i_Position;
 layout(location = 3) in vec3 i_LightColor;
 layout(location = 4) in vec3 i_LightPosition;
+layout(location = 5) in float i_ID;
 
-layout(location = 0) out vec4 fragColor;
+layout(location = 0) out vec4 o_Color;// color attachment 
+layout(location = 1) out vec4 o_ID;// id attachment
 
 void main()
 {
@@ -68,7 +73,8 @@ void main()
     // Final color calculation
     vec3 result = (ambient + diffuse) * vec3(i_Color);
 
-    fragColor = vec4(result, 1.0);
+    o_Color = vec4(result, 1.0);
+    o_ID = vec4(i_ID, 0, 0, 1);
 }
 
 #endif

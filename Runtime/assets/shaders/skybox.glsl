@@ -39,10 +39,12 @@ layout(location = 1) in vec4 i_BottomColor;
 layout(location = 2) in float  i_Height;
 
 layout(location = 0) out vec4 o_Color;
+layout(location = 1) out vec4 o_ID;
+
 void main() 
 {
     float t = (gl_FragCoord.y / i_Height);
     o_Color =  mix(i_TopColor, i_BottomColor, t);
-    //o_Color = i_BottomColor;
+    o_ID = vec4(-1.0, 0, 0, 1);
 }
 #endif
