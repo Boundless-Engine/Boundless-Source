@@ -5,8 +5,8 @@ constexpr const char* EDITOR_META_FILE_LOCATION = "themes/default.json\0";
 
 #include "imgui.h"
 
-#include "views/console.h"
-#include "views/scene.h"
+#include "views/console_view.h"
+#include "views/scene_view.h"
 
 
 namespace {

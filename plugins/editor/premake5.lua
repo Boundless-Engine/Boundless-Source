@@ -30,6 +30,7 @@ project "Boundless-Editor"
          "../../dependencies/GLFW/include",
          "../../dependencies/json/single_include/nlohmann",
          "../../dependencies/glm/",
+         "../../dependencies/entt/single_include/",
 
          -- graphics apis
          "%{IncludeDir.VulkanSDK}"

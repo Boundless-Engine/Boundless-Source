@@ -30,6 +30,7 @@ project "Runtime"
       "../dependencies/glfw/include/",
       "../dependencies/imgui/",
       "../dependencies/json/single_include/nlohmann",
+      "../dependencies/entt/single_include/",
 
       "%{IncludeDir.VulkanSDK}",
    }

@@ -18,6 +18,7 @@ project "BGraphics"
       "../../dependencies/GLFW/include",
       "../../dependencies/imgui/",
       "../../dependencies/glm/",
+      "../../dependencies/entt/single_include/",
 
       "%{IncludeDir.VulkanSDK}",
    }
